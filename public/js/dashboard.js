@@ -7,10 +7,18 @@ let currentFilters = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById("date-picker").value = new Date().toISOString().split('T')[0];
     fetchTransactions();
-    fetchKPIs(); // Initial KPI fetch
-
+    fetchKPIs(); // Initial KPI fetch    
+    
     // Event Listeners
+    document.getElementById('date-picker').addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            fetchTransactions();
+        }
+    });
+
     document.getElementById('search-input').addEventListener('input', debounce(event => {
         currentFilters.search = event.target.value;
         currentPage = 1;
@@ -68,6 +76,11 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function fetchTransactions() {
+
+    const datePicker = document.getElementById('date-picker');    
+    const selectedDate = datePicker.value; // Formato: YYYY-MM-DD    
+    const today = new Date(); 
+
     const transactionsList = document.getElementById('transactions-list');
     transactionsList.innerHTML = `
         <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-md animate-pulse">
@@ -82,9 +95,9 @@ async function fetchTransactions() {
             <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-full mb-2"></div>
             <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-5/6"></div>
         </div>
-    `; // Loading skeleton
-
+    `; // Loading skeleton    
     const queryParams = new URLSearchParams({
+        date: new Date(datePicker.value + 'T00:00:00')  ,
         page: currentPage,
         limit: transactionsPerPage,
         ...currentFilters
@@ -122,8 +135,9 @@ function renderTransactions(transactions) {
         lucide.createIcons();
         return;
     }
-
+    debugger;
     transactions.forEach((transaction, index) => {
+        debugger;
         const transactionCard = document.createElement('div');
         const typeColor = getTransactionTypeColor(transaction.Type);
         const typeIcon = getTransactionTypeIcon(transaction.Type);

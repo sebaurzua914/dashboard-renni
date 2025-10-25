@@ -1,7 +1,8 @@
 const express = require('express');
 const app = express();
 const path = require('path');
-const port = 3000;
+// CORRECTO para IIS - Solo un app.listen al final
+const port = process.env.PORT || 3000;
 
 // Import API routes
 const apiRoutes = require('./routes/api');

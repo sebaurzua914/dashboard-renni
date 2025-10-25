@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Ventas</title>
-    <link href="./css/output.css" rel="stylesheet">
+    <title>Korex - Dashboard de Ventas</title>
+    <link href="/css/output.css" rel="stylesheet">
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Lucide Icons -->
@@ -20,7 +20,7 @@
                 <h1 class="text-xl font-bold text-gray-700 dark:text-gray-200">
                     Dashboard de Ventas
                 </h1>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Movimientos en tiempo real (v1.2)</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Movimientos en tiempo real (v1.3)</p>
             </div>
         </div>
         <div class="flex items-center space-x-3">
@@ -74,8 +74,11 @@
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 ml-4">Transacciones del Día</h2>
                 </div>
                 <div class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                    
+                    <span>
+                        <input type="date" id="date-picker" class="ml-2 p-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"> 
+                    </span>                    
                     <span data-lucide="clock" class="w-4 h-4"></span>
-                    <span>Actualización automática</span>
                 </div>
             </div>
             
@@ -165,9 +168,9 @@
     <!-- Toast Notifications Container -->
     <div id="toast-container" class="fixed bottom-4 right-4 space-y-2"></div>
 
-    <script src="./js/utils.js"></script>
-    <script src="./js/kpis.js"></script>
-    <script src="./js/dashboard.js"></script>
+    <script src="/js/utils.js"></script>
+    <script src="/js/kpis.js"></script>
+    <script src="/js/dashboard.js"></script>
     <script>
         lucide.createIcons();
     </script>
