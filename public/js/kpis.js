@@ -1,4 +1,5 @@
 async function fetchKPIs() {
+    const datePicker = document.getElementById('date-picker');    
     const kpisContainer = document.getElementById('kpis-container');
     kpisContainer.innerHTML = `
         <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-md animate-pulse">
@@ -14,9 +15,12 @@ async function fetchKPIs() {
             <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
         </div>
     `;
+    const queryParams = new URLSearchParams({
+        date: new Date(datePicker.value + 'T00:00:00')   
+    }).toString();
 
     try {
-        const response = await fetch('/api/kpis/today');
+        const response = await fetch(`/api/kpis/today?${queryParams}`);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }

@@ -9,6 +9,147 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        /* User menu dropdown styles */
+        .user-menu {
+            position: relative;
+        }
+
+        .user-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .dark .user-button {
+            background: rgba(55, 65, 81, 0.9);
+        }
+
+        .user-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            border-color: #3b82f6;
+        }
+
+        .user-avatar {
+            width: 2rem;
+            height: 2rem;
+            background: linear-gradient(135deg, #a8c8ec 0%, #c8a8e9 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            font-size: 0.875rem;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: calc(100% + 0.5rem);
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+            min-width: 200px;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            z-index: 1000;
+        }
+
+        .dark .user-dropdown {
+            background: rgba(31, 41, 55, 0.95);
+            border-color: rgba(55, 65, 81, 0.3);
+        }
+
+        .user-dropdown.show {
+            display: block;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            color: #4b5563;
+            text-decoration: none;
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+
+        .dark .dropdown-item {
+            color: #d1d5db;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .dropdown-item:first-child {
+            border-radius: 0.75rem 0.75rem 0 0;
+        }
+
+        .dropdown-item:last-child {
+            border-radius: 0 0 0.75rem 0.75rem;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background: #e5e7eb;
+            margin: 0.25rem 0;
+        }
+
+        .dark .dropdown-divider {
+            background: #4b5563;
+        }
+
+        .dropdown-header {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .dark .dropdown-header {
+            border-bottom-color: #4b5563;
+        }
+
+        .dropdown-header .user-name {
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 0.95rem;
+        }
+
+        .dark .dropdown-header .user-name {
+            color: #f3f4f6;
+        }
+
+        .dropdown-header .user-email {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .dark .dropdown-header .user-email {
+            color: #9ca3af;
+        }
+    </style>
 </head>
 <body class="min-h-screen flex flex-col">
     <header class="header-gradient shadow-md p-4 flex justify-between items-center animate-fadeIn mb-6">
@@ -20,7 +161,7 @@
                 <h1 class="text-xl font-bold text-gray-700 dark:text-gray-200">
                     Dashboard de Ventas
                 </h1>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Movimientos en tiempo real (v1.3)</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Movimientos en tiempo real (v1.4)</p>
             </div>
         </div>
         <div class="flex items-center space-x-3">
@@ -31,6 +172,38 @@
             <button id="refresh-button" class="p-2 rounded-lg bg-blue-400 text-white shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
                 <span data-lucide="refresh-cw" class="w-4 h-4"></span>
             </button>
+            
+            <!-- User Menu -->
+            <div class="user-menu">
+                <button class="user-button" id="user-menu-button">
+                    <div class="user-avatar" id="user-avatar">
+                        <span data-lucide="user" class="w-4 h-4"></span>
+                    </div>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-200 hidden sm:block" id="user-name-display">Usuario</span>
+                    <span data-lucide="chevron-down" class="w-4 h-4 text-gray-500 dark:text-gray-400"></span>
+                </button>
+                
+                <div class="user-dropdown" id="user-dropdown">
+                    <div class="dropdown-header">
+                        <div class="user-name" id="dropdown-user-name">Usuario</div>
+                        <div class="user-email" id="dropdown-user-email">usuario@korex.com</div>
+                    </div>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item" id="profile-link">
+                        <span data-lucide="user" class="w-4 h-4"></span>
+                        <span>Mi Perfil</span>
+                    </a>
+                    <a href="#" class="dropdown-item" id="settings-link">
+                        <span data-lucide="settings" class="w-4 h-4"></span>
+                        <span>Configuración</span>
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item" id="logout-link">
+                        <span data-lucide="log-out" class="w-4 h-4 text-red-500"></span>
+                        <span class="text-red-500">Cerrar Sesión</span>
+                    </a>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -74,11 +247,12 @@
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 ml-4">Transacciones del Día</h2>
                 </div>
                 <div class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-                    
                     <span>
                         <input type="date" id="date-picker" class="ml-2 p-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"> 
-                    </span>                    
-                    <span data-lucide="clock" class="w-4 h-4"></span>
+                    </span>                                        
+                    <button id="clock-button" class="p-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
+                        <span data-lucide="clock" class="w-4 h-4"></span>
+                    </button>
                 </div>
             </div>
             
@@ -172,7 +346,97 @@
     <script src="/js/kpis.js"></script>
     <script src="/js/dashboard.js"></script>
     <script>
+        // Initialize Lucide icons
         lucide.createIcons();
+
+        // Auth Check - Redirect to login if not authenticated
+        function checkAuth() {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/login.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Load user data
+        function loadUserData() {
+            // Get user data from localStorage or from API
+            const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+            const username = userData.username || 'Usuario';
+            const email = userData.email || 'usuario@korex.com';
+            
+            // Update UI with user data
+            document.getElementById('user-name-display').textContent = username;
+            document.getElementById('dropdown-user-name').textContent = username;
+            document.getElementById('dropdown-user-email').textContent = email;
+            
+            // Set avatar with first letter of username
+            const avatarElement = document.getElementById('user-avatar');
+            avatarElement.innerHTML = username.charAt(0).toUpperCase();
+        }
+
+        // User menu toggle
+        const userMenuButton = document.getElementById('user-menu-button');
+        const userDropdown = document.getElementById('user-dropdown');
+
+        userMenuButton.addEventListener('click', (e) => {
+            e.stopPropagation();
+            userDropdown.classList.toggle('show');
+            lucide.createIcons();
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!userMenuButton.contains(e.target) && !userDropdown.contains(e.target)) {
+                userDropdown.classList.remove('show');
+            }
+        });
+
+        // Profile link
+        document.getElementById('profile-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            userDropdown.classList.remove('show');
+            // Navigate to profile page or show profile modal
+            alert('Ir a perfil de usuario');
+        });
+
+        // Settings link
+        document.getElementById('settings-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            userDropdown.classList.remove('show');
+            // Navigate to settings page or show settings modal
+            alert('Ir a configuración');
+        });
+
+        // Logout
+        document.getElementById('logout-link').addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Confirm logout
+            if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+                // Clear auth tokens
+                localStorage.removeItem('authToken');
+                sessionStorage.removeItem('authToken');
+                localStorage.removeItem('userData');
+                
+                // Show toast
+                showToast('Sesión cerrada correctamente', 'success');
+                
+                // Redirect to login after a brief delay
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 1000);
+            }
+        });
+
+        // Initialize on page load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Check authentication
+            if (checkAuth()) {
+                loadUserData();
+            }
+        });
     </script>
 </body>
 </html>

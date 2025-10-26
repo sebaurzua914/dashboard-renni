@@ -14,12 +14,11 @@ router.get('/health', async (req, res) => {
 
 router.get('/transactions/today', async (req, res) => {
   try {
-    const today = req.query.date;// new Date();
+    const today = req.query.date ? new Date(req.query.date) : new Date();  //  req.query.date;// new Date();
     const day = String(today.getDate()).padStart(2, '0');
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const year = today.getFullYear();
     const key = `${day}:${month}:${year}:logs`;
-
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const start = (page - 1) * limit;
@@ -28,9 +27,7 @@ router.get('/transactions/today', async (req, res) => {
     const transactionType = req.query.type;
     const paymentMethod = req.query.paymentMethod;
     const searchTerm = req.query.search;
-    
     let transactions = await redisClient.lRange(key, 0, -1);
-
     if (!transactions) {
       transactions = [];
     }
@@ -104,7 +101,8 @@ router.get('/transactions/:id', async (req, res) => {
 
 router.get('/kpis/today', async (req, res) => {
   try {
-    const today = new Date();
+    //const today = new Date();
+    const today = req.query.date ? new Date(req.query.date) : new Date();  //  req.query.date;// new Date();
     const day = String(today.getDate()).padStart(2, '0');
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const year = today.getFullYear();

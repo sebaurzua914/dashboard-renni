@@ -55,6 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Datos actualizados.', 'info');
     });
 
+    document.getElementById('clock-button').addEventListener('click', () => {
+        fetchTransactions();
+        fetchKPIs();
+        showToast('Datos actualizados.', 'info');
+    });    
+    
     document.getElementById('close-modal').addEventListener('click', closeModal);
 
     // Auto-refresh every 30 seconds
@@ -76,11 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 async function fetchTransactions() {
-
     const datePicker = document.getElementById('date-picker');    
     const selectedDate = datePicker.value; // Formato: YYYY-MM-DD    
-    const today = new Date(); 
-
+    const today = new Date();
     const transactionsList = document.getElementById('transactions-list');
     transactionsList.innerHTML = `
         <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-md animate-pulse">
@@ -121,8 +125,9 @@ async function fetchTransactions() {
 function renderTransactions(transactions) {
     const transactionsList = document.getElementById('transactions-list');
     transactionsList.innerHTML = ''; // Clear previous transactions
-
+    console.log('Transactions.length:', transactions.length);
     if (transactions.length === 0) {
+        
         transactionsList.innerHTML = `
             <div class="text-center py-12">
                 <div class="w-16 h-16 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -135,9 +140,9 @@ function renderTransactions(transactions) {
         lucide.createIcons();
         return;
     }
-    debugger;
+    //debugger;
     transactions.forEach((transaction, index) => {
-        debugger;
+        //debugger;
         const transactionCard = document.createElement('div');
         const typeColor = getTransactionTypeColor(transaction.Type);
         const typeIcon = getTransactionTypeIcon(transaction.Type);
@@ -151,7 +156,7 @@ function renderTransactions(transactions) {
 
         transactionCard.className = `transaction-card ${borderColor} animate-fadeIn`;
         transactionCard.style.animationDelay = `${index * 0.1}s`;
-        
+        console.log(  transaction );
         transactionCard.innerHTML = `
             <div class="flex items-center justify-between mb-3">
                 <div class="flex items-center space-x-4">
@@ -181,22 +186,23 @@ function renderTransactions(transactions) {
                 </div>
             </div>
             
-            <div class="grid grid-cols-2 gap-4 mb-3">
-                <div class="bg-gray-50 dark:bg-gray-600 p-3 rounded-lg">
-                    <div class="flex items-center space-x-2 mb-1">
-                        <span data-lucide="user" class="w-4 h-4 text-blue-600"></span>
-                        <span class="text-xs font-medium text-gray-600 dark:text-gray-300">Cliente</span>
-                    </div>
-                    <span class="font-bold text-blue-600">#${transaction['Cliente ID']}</span>
-                </div>
-                <div class="bg-gray-50 dark:bg-gray-600 p-3 rounded-lg">
-                    <div class="flex items-center space-x-2 mb-1">
-                        <span data-lucide="user-check" class="w-4 h-4 text-purple-600"></span>
-                        <span class="text-xs font-medium text-gray-600 dark:text-gray-300">Cajero</span>
-                    </div>
-                    <span class="font-bold text-purple-600">#${transaction['Cajero ID']}</span>
-                </div>
-            </div>
+
+<div class="flex gap-4 mb-3">
+    <div class="bg-gray-50 dark:bg-gray-600 p-3 rounded-lg flex-1">
+        <div class="flex items-center space-x-2">
+            <span data-lucide="user" class="w-4 h-4 text-blue-600"></span>
+            <span class="text-xs font-medium text-gray-600 dark:text-gray-300">Cliente</span>
+            <span class="font-bold text-blue-600 ml-auto">#${transaction['Cliente ID']}</span>
+        </div>
+    </div>
+    <div class="bg-gray-50 dark:bg-gray-600 p-3 rounded-lg flex-1">
+        <div class="flex items-center space-x-2">
+            <span data-lucide="user-check" class="w-4 h-4 text-purple-600"></span>
+            <span class="text-xs font-medium text-gray-600 dark:text-gray-300">Cajero</span>
+            <span class="font-bold text-purple-600 ml-auto">#${transaction['Cajero ID']}</span>
+        </div>
+    </div>
+</div>
             
             <div class="flex items-center justify-between">
                 <div class="flex items-center space-x-2">
