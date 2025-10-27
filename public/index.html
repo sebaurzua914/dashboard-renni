@@ -1,16 +1,153 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Korex - Dashboard de Ventas</title>
-    <link href="/css/output.css" rel="stylesheet">
-    <!-- Font Awesome Icons -->
+    <title>Korex Security - Sistema de Monitoreo de Anomalías</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        /* User menu dropdown styles */
+        :root {
+            --primary-blue: #1e40af;
+            --primary-dark: #1e3a8a;
+            --accent-cyan: #06b6d4;
+            --security-red: #dc2626;
+            --success-green: #059669;
+            --warning-amber: #d97706;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #e2e8f0 100%);
+        }
+
+        .dark body {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+
+        /* Header Styles */
+        .header-gradient {
+            background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #06b6d4 100%);
+            box-shadow: 0 4px 20px rgba(30, 64, 175, 0.3);
+            border-bottom: 3px solid rgba(6, 182, 212, 0.5);
+        }
+
+        .dark .header-gradient {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #0e7490 100%);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Logo Animation */
+        .logo-container {
+            position: relative;
+            animation: pulse-glow 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 15px rgba(6, 182, 212, 0.5); }
+            50% { box-shadow: 0 0 25px rgba(6, 182, 212, 0.8); }
+        }
+
+        /* Card Styles */
+        .security-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            border: 2px solid rgba(30, 64, 175, 0.1);
+            box-shadow: 0 8px 32px rgba(30, 64, 175, 0.12);
+            transition: all 0.3s ease;
+        }
+
+        .dark .security-card {
+            background: rgba(30, 41, 59, 0.95);
+            border-color: rgba(59, 130, 246, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .security-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(30, 64, 175, 0.2);
+            border-color: rgba(6, 182, 212, 0.4);
+        }
+
+        /* KPI Cards */
+        .kpi-card {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dark .kpi-card {
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--accent-cyan));
+        }
+
+        .kpi-card:hover {
+            border-color: var(--accent-cyan);
+            transform: translateX(4px);
+        }
+
+        /* Transaction Cards */
+        .transaction-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            padding: 1.25rem;
+            border-left: 4px solid transparent;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dark .transaction-card {
+            background: rgba(30, 41, 59, 0.9);
+        }
+
+        .transaction-card:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: translateX(8px);
+            box-shadow: 0 4px 20px rgba(30, 64, 175, 0.15);
+        }
+
+        .dark .transaction-card:hover {
+            background: rgba(30, 41, 59, 1);
+        }
+
+        .transaction-card.normal {
+            border-left-color: var(--success-green);
+        }
+
+        .transaction-card.anomalous {
+            border-left-color: var(--security-red);
+            animation: pulse-alert 2s ease-in-out infinite;
+        }
+
+        .transaction-card.unknown {
+            border-left-color: var(--warning-amber);
+        }
+
+        @keyframes pulse-alert {
+            0%, 100% { 
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+            }
+            50% { 
+                box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+            }
+        }
+
+        /* User Menu */
         .user-menu {
             position: relative;
         }
@@ -18,56 +155,60 @@
         .user-button {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.75rem;
             padding: 0.5rem 1rem;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 0.75rem;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
-            border: 2px solid transparent;
+            border: 2px solid rgba(6, 182, 212, 0.3);
         }
 
         .dark .user-button {
-            background: rgba(55, 65, 81, 0.9);
+            background: rgba(30, 41, 59, 0.95);
+            border-color: rgba(6, 182, 212, 0.4);
         }
 
         .user-button:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
-            border-color: #3b82f6;
+            box-shadow: 0 6px 20px rgba(6, 182, 212, 0.3);
+            border-color: var(--accent-cyan);
         }
 
         .user-avatar {
-            width: 2rem;
-            height: 2rem;
-            background: linear-gradient(135deg, #a8c8ec 0%, #c8a8e9 100%);
+            width: 2.5rem;
+            height: 2.5rem;
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-cyan) 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 600;
+            font-weight: 700;
             color: white;
-            font-size: 0.875rem;
+            font-size: 1rem;
+            border: 2px solid rgba(255, 255, 255, 0.3);
         }
 
         .user-dropdown {
             position: absolute;
-            top: calc(100% + 0.5rem);
+            top: calc(100% + 0.75rem);
             right: 0;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 0.75rem;
-            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
-            min-width: 200px;
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(30, 64, 175, 0.2);
+            min-width: 240px;
             display: none;
             animation: slideDown 0.3s ease-out;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(6, 182, 212, 0.2);
             z-index: 1000;
+            overflow: hidden;
         }
 
         .dark .user-dropdown {
-            background: rgba(31, 41, 55, 0.95);
-            border-color: rgba(55, 65, 81, 0.3);
+            background: rgba(30, 41, 59, 0.98);
+            border-color: rgba(6, 182, 212, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
         }
 
         .user-dropdown.show {
@@ -77,7 +218,7 @@
         @keyframes slideDown {
             from {
                 opacity: 0;
-                transform: translateY(-10px);
+                transform: translateY(-15px);
             }
             to {
                 opacity: 1;
@@ -89,248 +230,491 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            padding: 0.75rem 1rem;
-            color: #4b5563;
+            padding: 0.875rem 1.25rem;
+            color: #475569;
             text-decoration: none;
             transition: all 0.2s ease;
             cursor: pointer;
+            font-weight: 500;
         }
 
         .dark .dropdown-item {
-            color: #d1d5db;
+            color: #cbd5e1;
         }
 
         .dropdown-item:hover {
-            background: rgba(59, 130, 246, 0.1);
-        }
-
-        .dropdown-item:first-child {
-            border-radius: 0.75rem 0.75rem 0 0;
-        }
-
-        .dropdown-item:last-child {
-            border-radius: 0 0 0.75rem 0.75rem;
-        }
-
-        .dropdown-divider {
-            height: 1px;
-            background: #e5e7eb;
-            margin: 0.25rem 0;
-        }
-
-        .dark .dropdown-divider {
-            background: #4b5563;
+            background: linear-gradient(90deg, rgba(6, 182, 212, 0.1), rgba(59, 130, 246, 0.1));
+            padding-left: 1.5rem;
         }
 
         .dropdown-header {
-            padding: 0.75rem 1rem;
-            border-bottom: 1px solid #e5e7eb;
+            padding: 1.25rem;
+            background: linear-gradient(135deg, rgba(30, 64, 175, 0.05), rgba(6, 182, 212, 0.05));
+            border-bottom: 2px solid rgba(6, 182, 212, 0.2);
         }
 
         .dark .dropdown-header {
-            border-bottom-color: #4b5563;
+            background: linear-gradient(135deg, rgba(30, 64, 175, 0.2), rgba(6, 182, 212, 0.2));
         }
 
-        .dropdown-header .user-name {
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-cyan));
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 12px;
             font-weight: 600;
-            color: #1f2937;
-            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
         }
 
-        .dark .dropdown-header .user-name {
-            color: #f3f4f6;
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(30, 64, 175, 0.4);
         }
 
-        .dropdown-header .user-email {
+        .btn-icon {
+            padding: 0.75rem;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 2px solid rgba(6, 182, 212, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .dark .btn-icon {
+            background: rgba(30, 41, 59, 0.95);
+            border-color: rgba(6, 182, 212, 0.3);
+        }
+
+        .btn-icon:hover {
+            transform: scale(1.1) rotate(5deg);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+        }
+
+        /* Input Styles */
+        .security-input {
+            width: 100%;
+            padding: 0.875rem 1rem;
+            padding-left: 2.75rem;
+            border-radius: 12px;
+            border: 2px solid rgba(30, 64, 175, 0.2);
+            background: rgba(255, 255, 255, 0.95);
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .dark .security-input {
+            background: rgba(30, 41, 59, 0.95);
+            border-color: rgba(59, 130, 246, 0.3);
+            color: #e2e8f0;
+        }
+
+        .security-input:focus {
+            outline: none;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.1);
+        }
+
+        /* Badge Styles */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.875rem;
+            border-radius: 8px;
             font-size: 0.75rem;
-            color: #6b7280;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .dark .dropdown-header .user-email {
-            color: #9ca3af;
+        .badge-success {
+            background: linear-gradient(135deg, #059669, #10b981);
+            color: white;
+        }
+
+        .badge-danger {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: white;
+            animation: pulse-badge 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse-badge {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .badge-warning {
+            background: linear-gradient(135deg, #d97706, #f59e0b);
+            color: white;
+        }
+
+        /* Modal */
+        .modal-backdrop {
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(30, 64, 175, 0.05);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-cyan));
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary-blue));
+        }
+
+        /* Animations */
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .animate-slide-in-left {
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .animate-slide-in-right {
+            animation: slideInRight 0.5s ease-out;
+        }
+
+        .animate-fadeIn {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Status Indicators */
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-online {
+            background: var(--success-green);
+            box-shadow: 0 0 10px var(--success-green);
+        }
+
+        .status-alert {
+            background: var(--security-red);
+            box-shadow: 0 0 10px var(--security-red);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Section Headers */
+        .section-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .section-icon {
+            width: 3rem;
+            height: 3rem;
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-cyan));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(30, 64, 175, 0.3);
+        }
+
+        /* Alert Banner */
+        .alert-banner {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.1), rgba(239, 68, 68, 0.1));
+            border-left: 4px solid var(--security-red);
+            padding: 1rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            animation: slideInLeft 0.5s ease-out;
+        }
+
+        .dark .alert-banner {
+            background: linear-gradient(135deg, rgba(220, 38, 38, 0.2), rgba(239, 68, 68, 0.2));
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .user-button span {
+                display: none;
+            }
+            
+            .section-header h2 {
+                font-size: 1.25rem;
+            }
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col">
-    <header class="header-gradient shadow-md p-4 flex justify-between items-center animate-fadeIn mb-6">
-        <div class="flex items-center space-x-3">
-            <div class="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center shadow-sm">
-                <span data-lucide="bar-chart-3" class="w-4 h-4 text-white"></span>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="header-gradient shadow-lg p-4 sticky top-0 z-50">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="logo-container w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                    <i class="fas fa-shield-halved text-white text-2xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+                        Korex Security
+                        <span class="status-indicator status-online"></span>
+                    </h1>
+                    <p class="text-xs text-blue-100">Sistema de Monitoreo de Anomalías • v1.4</p>
+                </div>
             </div>
-            <div>
-                <h1 class="text-xl font-bold text-gray-700 dark:text-gray-200">
-                    Dashboard de Ventas
-                </h1>
-                <p class="text-xs text-gray-500 dark:text-gray-400">Movimientos en tiempo real (v1.4)</p>
-            </div>
-        </div>
-        <div class="flex items-center space-x-3">
-            <button id="theme-toggle" class="p-2 rounded-lg bg-white dark:bg-gray-700 shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
-                <span data-lucide="moon" class="w-4 h-4 dark:hidden text-gray-600"></span>
-                <span data-lucide="sun" class="w-4 h-4 hidden dark:block text-yellow-500"></span>
-            </button>
-            <button id="refresh-button" class="p-2 rounded-lg bg-blue-400 text-white shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
-                <span data-lucide="refresh-cw" class="w-4 h-4"></span>
-            </button>
             
-            <!-- User Menu -->
-            <div class="user-menu">
-                <button class="user-button" id="user-menu-button">
-                    <div class="user-avatar" id="user-avatar">
-                        <span data-lucide="user" class="w-4 h-4"></span>
-                    </div>
-                    <span class="text-sm font-medium text-gray-700 dark:text-gray-200 hidden sm:block" id="user-name-display">Usuario</span>
-                    <span data-lucide="chevron-down" class="w-4 h-4 text-gray-500 dark:text-gray-400"></span>
+            <div class="flex items-center space-x-3">
+                <!-- Theme Toggle -->
+                <button id="theme-toggle" class="btn-icon">
+                    <i class="fas fa-moon text-blue-600 dark:hidden"></i>
+                    <i class="fas fa-sun text-yellow-400 hidden dark:block"></i>
                 </button>
                 
-                <div class="user-dropdown" id="user-dropdown">
-                    <div class="dropdown-header">
-                        <div class="user-name" id="dropdown-user-name">Usuario</div>
-                        <div class="user-email" id="dropdown-user-email">usuario@korex.com</div>
+                <!-- Refresh Button -->
+                <button id="refresh-button" class="btn-icon">
+                    <i class="fas fa-sync-alt text-blue-600 dark:text-cyan-400"></i>
+                </button>
+                
+                <!-- Notifications -->
+                <button class="btn-icon relative">
+                    <i class="fas fa-bell text-blue-600 dark:text-cyan-400"></i>
+                    <span class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-white text-xs flex items-center justify-center font-bold">3</span>
+                </button>
+                
+                <!-- User Menu -->
+                <div class="user-menu">
+                    <button class="user-button" id="user-menu-button">
+                        <div class="user-avatar" id="user-avatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="hidden md:block text-left">
+                            <div class="text-sm font-bold text-gray-700 dark:text-gray-200" id="user-name-display">Usuario</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">Administrador</div>
+                        </div>
+                        <i class="fas fa-chevron-down text-gray-500 dark:text-gray-400 text-sm"></i>
+                    </button>
+                    
+                    <div class="user-dropdown" id="user-dropdown">
+                        <div class="dropdown-header">
+                            <div class="text-base font-bold text-gray-800 dark:text-gray-100" id="dropdown-user-name">Usuario</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400" id="dropdown-user-email">usuario@korex.com</div>
+                            <div class="mt-2 flex items-center gap-2">
+                                <span class="status-indicator status-online"></span>
+                                <span class="text-xs text-green-600 dark:text-green-400 font-semibold">En línea</span>
+                            </div>
+                        </div>
+                        <a href="#" class="dropdown-item" id="profile-link">
+                            <i class="fas fa-user-circle w-5"></i>
+                            <span>Mi Perfil</span>
+                        </a>
+                        <a href="#" class="dropdown-item" id="settings-link">
+                            <i class="fas fa-cog w-5"></i>
+                            <span>Configuración</span>
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-shield-alt w-5"></i>
+                            <span>Seguridad</span>
+                        </a>
+                        <a href="#" class="dropdown-item">
+                            <i class="fas fa-question-circle w-5"></i>
+                            <span>Ayuda</span>
+                        </a>
+                        <div style="height: 2px; background: linear-gradient(90deg, transparent, rgba(6, 182, 212, 0.3), transparent); margin: 0.5rem 0;"></div>
+                        <a href="#" class="dropdown-item" id="logout-link">
+                            <i class="fas fa-sign-out-alt w-5 text-red-500"></i>
+                            <span class="text-red-500 font-semibold">Cerrar Sesión</span>
+                        </a>
                     </div>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item" id="profile-link">
-                        <span data-lucide="user" class="w-4 h-4"></span>
-                        <span>Mi Perfil</span>
-                    </a>
-                    <a href="#" class="dropdown-item" id="settings-link">
-                        <span data-lucide="settings" class="w-4 h-4"></span>
-                        <span>Configuración</span>
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item" id="logout-link">
-                        <span data-lucide="log-out" class="w-4 h-4 text-red-500"></span>
-                        <span class="text-red-500">Cerrar Sesión</span>
-                    </a>
                 </div>
             </div>
         </div>
     </header>
 
-    <main class="flex-1 container mx-auto p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
-        <!-- KPIs Section -->
-        <section class="lg:col-span-1 space-y-6">
-            <div class="flex items-center space-x-3 mb-6">
-                <div class="w-8 h-8 bg-gradient-success rounded-lg flex items-center justify-center">
-                    <span data-lucide="trending-up" class="w-4 h-4 text-white"></span>
-                </div>
-                <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Métricas en Vivo</h2>
-            </div>
-            <div id="kpis-container" class="space-y-6">
-                <!-- KPIs will be loaded here -->
-                <div class="kpi-card animate-pulse">
-                    <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
-                    <div class="h-8 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
-                </div>
-                <div class="kpi-card animate-pulse">
-                    <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
-                    <div class="h-6 bg-gray-200 dark:bg-gray-600 rounded w-full mb-1"></div>
-                    <div class="h-6 bg-gray-200 dark:bg-gray-600 rounded w-full mb-1"></div>
-                    <div class="h-6 bg-gray-200 dark:bg-gray-600 rounded w-full"></div>
-                </div>
-                <div class="kpi-card animate-pulse">
-                    <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
-                    <div class="h-6 bg-gray-200 dark:bg-gray-600 rounded w-full mb-1"></div>
-                    <div class="h-6 bg-gray-200 dark:bg-gray-600 rounded w-full mb-1"></div>
-                    <div class="h-6 bg-gray-200 dark:bg-gray-600 rounded w-full"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Transactions Section -->
-        <section class="lg:col-span-2 card flex flex-col">
-            <div class="flex items-center justify-between mb-6">
-                <div class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center mr-4">
-                        <span data-lucide="activity" class="w-4 h-4 text-white"></span>
+    <!-- Main Content -->
+    <main class="container mx-auto p-4 md:p-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- KPIs Section -->
+            <section class="lg:col-span-1 space-y-6 animate-slide-in-left">
+                <div class="section-header">
+                    <div class="section-icon">
+                        <i class="fas fa-chart-line text-white text-xl"></i>
                     </div>
-                    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 ml-4">Transacciones del Día</h2>
+                    <div>
+                        <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Métricas</h2>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Indicadores del sistema</p>
+                    </div>
                 </div>
-                <div class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-                    <span>
-                        <input type="date" id="date-picker" class="ml-2 p-1 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"> 
-                    </span>                                        
-                    <button id="clock-button" class="p-2 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105">
-                        <span data-lucide="clock" class="w-4 h-4"></span>
+                
+                <div id="kpis-container" class="space-y-4">
+                    <!-- KPI Cards will be loaded here by kpis.js -->
+                    <div class="kpi-card animate-pulse">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
+                        <div class="h-8 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
+                    </div>
+                    <div class="kpi-card animate-pulse">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
+                        <div class="h-6 bg-gray-200 dark:bg-gray-600 rounded w-full mb-1"></div>
+                        <div class="h-6 bg-gray-200 dark:bg-gray-600 rounded w-full mb-1"></div>
+                        <div class="h-6 bg-gray-200 dark:bg-gray-600 rounded w-full"></div>
+                    </div>
+                    <div class="kpi-card animate-pulse">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
+                        <div class="h-6 bg-gray-200 dark:bg-gray-600 rounded w-full mb-1"></div>
+                        <div class="h-6 bg-gray-200 dark:bg-gray-600 rounded w-full mb-1"></div>
+                        <div class="h-6 bg-gray-200 dark:bg-gray-600 rounded w-full"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Transactions Section -->
+            <section class="lg:col-span-2 security-card p-6 animate-slide-in-right">
+                <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+                    <div class="section-header mb-0">
+                        <div class="section-icon">
+                            <i class="fas fa-exclamation-triangle text-white text-xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Detección de Anomalías</h2>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Monitoreo en tiempo real</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="date" id="date-picker" class="security-input text-sm" style="padding-left: 1rem;">
+                        <button id="clock-button" class="btn-icon">
+                            <i class="fas fa-clock text-blue-600 dark:text-cyan-400"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Filters -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="relative">
+                        <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <input type="text" id="search-input" placeholder="Buscar por ID, cajero..." class="security-input">
+                    </div>
+                    <div class="relative">
+                        <i class="fas fa-filter absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <select id="type-filter" class="security-input" style="padding-left: 2.75rem;">
+                            <option value="">Todos los Estados</option>
+                            <option value="normal">✅ Normal</option>
+                            <option value="anomalous">⚠️ Anomalía</option>
+                            <option value="unknown">❓ Desconocido</option>
+                        </select>
+                    </div>
+                    <div class="relative">
+                        <i class="fas fa-credit-card absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                        <select id="payment-filter" class="security-input" style="padding-left: 2.75rem;">
+                            <option value="">Todos los Métodos</option>
+                            <option value="pago_tarjeta">💳 Pago con Tarjeta</option>
+                            <option value="pago_efectivo">💰 Pago en Efectivo</option>
+                            <option value="otros_metodos">🔄 Otros Métodos</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Transactions List -->
+                <div id="transactions-list" class="space-y-3 overflow-y-auto max-h-96 pr-2 mb-6">
+                    <!-- Transactions will be loaded here by dashboard.js -->
+                    <div class="transaction-card animate-pulse">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-full mb-2"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-5/6"></div>
+                    </div>
+                    <div class="transaction-card animate-pulse">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-full mb-2"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-5/6"></div>
+                    </div>
+                    <div class="transaction-card animate-pulse">
+                        <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-full mb-2"></div>
+                        <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-5/6"></div>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                <div class="flex flex-col md:flex-row justify-between items-center gap-4 pt-4 border-t-2 border-gray-200 dark:border-gray-700">
+                    <button id="prev-page" class="btn-primary flex items-center gap-2">
+                        <i class="fas fa-chevron-left"></i>
+                        <span>Anterior</span>
+                    </button>
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-file-alt text-gray-500"></i>
+                        <span id="page-info" class="font-bold text-gray-700 dark:text-gray-300">Página 1</span>
+                    </div>
+                    <button id="next-page" class="btn-primary flex items-center gap-2">
+                        <span>Siguiente</span>
+                        <i class="fas fa-chevron-right"></i>
                     </button>
                 </div>
-            </div>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                <div class="relative">
-                    <span data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400"></span>
-                    <input type="text" id="search-input" placeholder="Buscar transacciones..."
-                           class="w-full pl-10 pr-4 py-3 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:bg-white dark:focus:bg-gray-600 transition-all duration-300">
-                </div>
-                <select id="type-filter"
-                        class="px-4 py-3 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:bg-white dark:focus:bg-gray-600 transition-all duration-300">
-                    <option value="">🔍 Todos los Tipos</option>
-                    <option value="normal">✅ Normal</option>
-                    <option value="anomalous">⚠️ Anomalous</option>
-                    <option value="unknown">❓ Unknown</option>
-                </select>
-                <select id="payment-filter"
-                        class="px-4 py-3 rounded-xl border-2 border-transparent bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:border-blue-500 focus:bg-white dark:focus:bg-gray-600 transition-all duration-300">
-                    <option value="">💳 Todos los Métodos</option>
-                    <option value="pago_tarjeta">💳 Pago con Tarjeta</option>
-                    <option value="pago_efectivo">💰 Pago en Efectivo</option>
-                    <option value="otros_metodos">🔄 Otros Métodos</option>
-                </select>
-            </div>
-            
-            <div id="transactions-list" class="flex-1 space-y-4 overflow-y-auto max-h-96 pr-2">
-                <!-- Transactions will be loaded here -->
-                <div class="transaction-card animate-pulse ">
-                    <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-full mb-2"></div>
-                    <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-5/6"></div>
-                </div>
-                <div class="transaction-card animate-pulse ">
-                    <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-full mb-2"></div>
-                    <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-5/6"></div>
-                </div>
-                <div class="transaction-card animate-pulse ">
-                    <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-full mb-2"></div>
-                    <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-5/6"></div>
-                </div>
-            </div>
-            
-            <div class="flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-                <button id="prev-page" class="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 hover:-translate-y-1 shadow-lg">
-                    <span data-lucide="chevron-left" class="w-4 h-4"></span>
-                    <span>Anterior</span>
-                </button>
-                <div class="flex items-center space-x-2">
-                    <span data-lucide="file-text" class="w-4 h-4 text-gray-500"></span>
-                    <span id="page-info" class="font-semibold text-gray-700 dark:text-gray-300">Página 1</span>
-                </div>
-                <button id="next-page" class="flex items-center space-x-2 px-4 py-2 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-300 hover:-translate-y-1 shadow-lg">
-                    <span>Siguiente</span>
-                    <span data-lucide="chevron-right" class="w-4 h-4"></span>
-                </button>
-            </div>
-        </section>
+            </section>
+        </div>
     </main>
 
     <!-- Transaction Detail Modal -->
-    <div id="transaction-modal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur flex items-center justify-center p-4 hidden">
-        <div class="card w-full max-w-2xl relative animate-fadeIn shadow-2xl">
-            <button id="close-modal" class="absolute top-4 right-4 p-2 rounded-xl bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:hover:bg-red-800 transition-all duration-300 hover:scale-110">
-                <span data-lucide="x" class="w-5 h-5 text-red-600 dark:text-red-400"></span>
+    <div id="transaction-modal" class="fixed inset-0 bg-black bg-opacity-60 modal-backdrop flex items-center justify-center p-4 hidden z-50">
+        <div class="security-card w-full max-w-4xl relative p-6 max-h-[90vh] overflow-y-auto">
+            <button id="close-modal" class="absolute top-4 right-4 w-10 h-10 bg-red-100 hover:bg-red-200 dark:bg-red-900 dark:hover:bg-red-800 rounded-xl flex items-center justify-center transition-all">
+                <i class="fas fa-times text-red-600 dark:text-red-400 text-lg"></i>
             </button>
-            <div class="flex items-center space-x-3 mb-6">
-                <div class="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center">
-                    <span data-lucide="file-text" class="w-5 h-5 text-white"></span>
+            
+            <div class="flex items-center gap-4 mb-6">
+                <div class="w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                    <i class="fas fa-file-invoice text-white text-2xl"></i>
                 </div>
-                <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Detalle de Transacción</h3>
+                <div>
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-gray-100">Detalle de Transacción</h3>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">Información completa del evento</p>
+                </div>
             </div>
+            
             <div id="modal-content" class="space-y-4">
-                <!-- Transaction details will be loaded here -->
+                <!-- Modal content will be loaded here by dashboard.js -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl animate-pulse">
+                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 animate-pulse">
                         <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
                         <div class="h-6 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
                     </div>
-                    <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-xl animate-pulse">
+                    <div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600 animate-pulse">
                         <div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
                         <div class="h-6 bg-gray-200 dark:bg-gray-600 rounded w-1/2"></div>
                     </div>
@@ -339,8 +723,8 @@
         </div>
     </div>
 
-    <!-- Toast Notifications Container -->
-    <div id="toast-container" class="fixed bottom-4 right-4 space-y-2"></div>
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
 
     <script src="/js/utils.js"></script>
     <script src="/js/kpis.js"></script>
@@ -361,17 +745,14 @@
 
         // Load user data
         function loadUserData() {
-            // Get user data from localStorage or from API
             const userData = JSON.parse(localStorage.getItem('userData') || '{}');
             const username = userData.username || 'Usuario';
             const email = userData.email || 'usuario@korex.com';
             
-            // Update UI with user data
             document.getElementById('user-name-display').textContent = username;
             document.getElementById('dropdown-user-name').textContent = username;
             document.getElementById('dropdown-user-email').textContent = email;
             
-            // Set avatar with first letter of username
             const avatarElement = document.getElementById('user-avatar');
             avatarElement.innerHTML = username.charAt(0).toUpperCase();
         }
@@ -386,7 +767,6 @@
             lucide.createIcons();
         });
 
-        // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             if (!userMenuButton.contains(e.target) && !userDropdown.contains(e.target)) {
                 userDropdown.classList.remove('show');
@@ -397,7 +777,6 @@
         document.getElementById('profile-link').addEventListener('click', (e) => {
             e.preventDefault();
             userDropdown.classList.remove('show');
-            // Navigate to profile page or show profile modal
             alert('Ir a perfil de usuario');
         });
 
@@ -405,7 +784,6 @@
         document.getElementById('settings-link').addEventListener('click', (e) => {
             e.preventDefault();
             userDropdown.classList.remove('show');
-            // Navigate to settings page or show settings modal
             alert('Ir a configuración');
         });
 
@@ -413,17 +791,13 @@
         document.getElementById('logout-link').addEventListener('click', (e) => {
             e.preventDefault();
             
-            // Confirm logout
             if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
-                // Clear auth tokens
                 localStorage.removeItem('authToken');
                 sessionStorage.removeItem('authToken');
                 localStorage.removeItem('userData');
                 
-                // Show toast
                 showToast('Sesión cerrada correctamente', 'success');
                 
-                // Redirect to login after a brief delay
                 setTimeout(() => {
                     window.location.href = '/login.html';
                 }, 1000);
@@ -432,7 +806,6 @@
 
         // Initialize on page load
         window.addEventListener('DOMContentLoaded', () => {
-            // Check authentication
             if (checkAuth()) {
                 loadUserData();
             }
