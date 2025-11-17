@@ -1,443 +1,348 @@
-// auth.js - Sistema de autenticación para Korex Dashboard
-// Configurado para consumir API MVC de beta.korex.cl
+// auth.js - Sistema de autenticación Korex Security
 
-// Configuración de la API
 const API_CONFIG = {
-    baseURL: 'https://beta.korex.cl/api',
+    baseURL: '',
     endpoints: {
-        login: '/auth/login',
-        verify: '/auth/verify',
-        logout: '/auth/logout',
-        refresh: '/auth/refresh'
+        validateUser: '/api/login',
+        getLog: '/api/logs',
+        summary: '/api/summary'
     }
 };
 
-/**
- * Verificar si el usuario está autenticado
- * @returns {boolean} - True si está autenticado, false si no
- */
-function isAuthenticated() {
-    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-    return !!token;
+// ============================================
+// GESTIÓN DE SESIÓN
+// ============================================
+
+function saveUserData(userData, remember = false) {
+    const storage = remember ? localStorage : sessionStorage;
+    const dataToSave = {
+        ...userData,
+        isLoggedIn: true,
+        loginTime: Date.now()
+    };
+
+    storage.setItem('korexUserData', JSON.stringify(dataToSave));
+
+    const otherStorage = remember ? sessionStorage : localStorage;
+    otherStorage.removeItem('korexUserData');
+
+    console.log('💾 Usuario guardado:', userData.email);
 }
 
-/**
- * Obtener el token de autenticación
- * @returns {string|null} - Token de autenticación o null
- */
-function getAuthToken() {
-    return localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-}
-
-/**
- * Guardar token de autenticación
- * @param {string} token - Token a guardar
- * @param {boolean} remember - Si debe recordar la sesión
- */
-function saveAuthToken(token, remember = false) {
-    if (remember) {
-        localStorage.setItem('authToken', token);
-        sessionStorage.removeItem('authToken');
-    } else {
-        sessionStorage.setItem('authToken', token);
-        localStorage.removeItem('authToken');
-    }
-}
-
-/**
- * Guardar datos del usuario
- * @param {object} userData - Datos del usuario
- */
-function saveUserData(userData) {
-    localStorage.setItem('userData', JSON.stringify(userData));
-}
-
-/**
- * Obtener datos del usuario
- * @returns {object} - Datos del usuario
- */
 function getUserData() {
-    const data = localStorage.getItem('userData');
-    return data ? JSON.parse(data) : null;
-}
+    const data = localStorage.getItem('korexUserData') || sessionStorage.getItem('korexUserData');
+    if (!data) return null;
 
-/**
- * Limpiar sesión
- */
-function clearSession() {
-    localStorage.removeItem('authToken');
-    sessionStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-}
+    try {
+        const userData = JSON.parse(data);
 
-/**
- * Cerrar sesión
- */
-async function logout() {
-    const token = getAuthToken();
-    
-    // Intentar cerrar sesión en el servidor
-    if (token) {
-        try {
-            await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.logout}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            });
-        } catch (error) {
-            console.error('Error al cerrar sesión en el servidor:', error);
+        const isLocalStorage = localStorage.getItem('korexUserData') !== null;
+        const maxAge = isLocalStorage ? 24 * 60 * 60 * 1000 : 2 * 60 * 60 * 1000;
+
+        if (Date.now() - userData.loginTime > maxAge) {
+            console.warn('⚠️ Sesión expirada');
+            clearSession();
+            return null;
         }
+
+        return userData;
+    } catch (error) {
+        console.error('❌ Error parsing user data:', error);
+        clearSession();
+        return null;
     }
-    
-    // Limpiar sesión local
+}
+
+function clearSession() {
+    localStorage.removeItem('korexUserData');
+    sessionStorage.removeItem('korexUserData');
+    console.log('🧹 Sesión limpiada');
+}
+
+function isAuthenticated() {
+    const userData = getUserData();
+    const isAuth = !!(userData && userData.email && userData.isLoggedIn);
+    console.log('🔐 isAuthenticated:', isAuth);
+    return isAuth;
+}
+
+function logout() {
     clearSession();
     window.location.href = '/login.html';
 }
 
-/**
- * Redirigir a login si no está autenticado
- */
-function requireAuth() {
-    if (!isAuthenticated()) {
-        window.location.href = '/login.html';
-        return false;
-    }
-    return true;
-}
+// ============================================
+// LOGIN
+// ============================================
 
-/**
- * Realizar login consumiendo API MVC de beta.korex.cl
- * @param {string} username - Nombre de usuario
- * @param {string} password - Contraseña
- * @param {boolean} remember - Recordar sesión
- * @returns {Promise<object>} - Respuesta del servidor
- */
 async function login(username, password, remember = false) {
     try {
-        /* deshabilitado auttenticacion hasta implementar KOREX Cloud 
-        */
-        saveUserData({
-                username: "admin",
-                email: `email@korex.cl`,
-                role: 'admin'
-            });
-        saveAuthToken("token", remember = false) ;
-        return getUserData();
-        /*----------*/
-        
-        const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.login}`, {
+        console.log('🔐 Intentando login:', username);
+
+        const url = API_CONFIG.endpoints.validateUser;
+
+        const formData = new FormData();
+        formData.append('usuario', username);
+        formData.append('clave', password);
+
+        console.log('📤 POST a:', url);
+
+        const response = await fetch(url, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify({
-                username: username,
-                password: password,
-                remember: remember
-            })
+            body: formData
         });
-        
-        // Manejar diferentes códigos de respuesta
-        if (response.status === 401) {
-            throw new Error('Usuario o contraseña incorrectos');
-        }
 
-        if (response.status === 403) {
-            throw new Error('Acceso denegado. Contacta al administrador.');
-        }
-
-        if (response.status === 500) {
-            throw new Error('Error del servidor. Intenta más tarde.');
-        }
+        console.log('📡 Respuesta:', response.status);
 
         if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+            throw new Error(`Error HTTP: ${response.status}`);
         }
 
         const data = await response.json();
-        
-        // Validar que la respuesta tenga el formato esperado
-        if (!data.token) {
-            throw new Error('Respuesta inválida del servidor: falta el token');
+        console.log('📦 Datos recibidos:', data);
+
+        if (data.success === true) {
+            const apiData = data.data || {};
+
+            const userData = {
+                email: apiData.correoUsuaWeb || username,
+                username: username,
+                fullName: apiData.nombreUsuaWeb || 'Usuario',
+                estado: apiData.estadoUsuaWeb || 'A',
+                ultimoAcceso: apiData.ultimoAccesoUsuaWeb || null,
+                loginTime: Date.now(),
+                isLoggedIn: true
+            };
+
+            saveUserData(userData, remember);
+
+            console.log('✅ Login exitoso:', userData.email);
+
+            return {
+                success: true,
+                user: userData,
+                message: 'Login exitoso'
+            };
+
+        } else {
+            throw new Error(data.message || 'Credenciales incorrectas');
         }
 
-        // Guardar token
-        saveAuthToken(data.token, remember);
-        
-        // Guardar datos del usuario
-        if (data.user || data.usuario) {
-            const userData = data.user || data.usuario;
-            saveUserData({
-                username: userData.username || userData.nombreUsuario || username,
-                email: userData.email || userData.correo || '',
-                role: userData.role || userData.rol || 'user',
-                fullName: userData.fullName || userData.nombreCompleto || username,
-                id: userData.id || userData.usuarioId || null
-            });
-        } else {
-            // Si no viene información del usuario, guardar lo básico
-            saveUserData({
-                username: username,
-                email: `${username}@korex.cl`,
-                role: 'user'
-            });
+    } catch (error) {
+        console.error('❌ Error en login:', error);
+        throw error;
+    }
+}
+
+// ============================================
+// OBTENER LOGS (⚠️ CORREGIDO)
+// ============================================
+
+/**
+ * Formatea una fecha ISO (YYYY-MM-DD) al formato que espera la API
+ * @param {string} dateISO - Fecha en formato YYYY-MM-DD
+ * @returns {string} - Fecha en formato YYYY-MM-DD HH:mm:ss
+ */
+function formatDateForApi(dateISO) {
+    // La API espera: "2025-11-14 00:00:00"
+    return `${dateISO} 00:00:00`;
+}
+
+async function fetchTransactionLogs(fecha = null, usuarioWeb = null, idDispositivo = null) {
+    try {
+        const userData = getUserData();
+        if (!userData) {
+            throw new Error('Usuario no autenticado');
         }
+
+        const finalUsuarioWeb = usuarioWeb || userData.email;
+        const finalFecha = fecha || new Date().toISOString().split('T')[0];
+
+        // ⚠️ CAMBIO CRÍTICO: Formatear fecha con hora
+        const fechaFormateada = formatDateForApi(finalFecha);
+
+        const url = new URL(API_CONFIG.endpoints.getLog, window.location.origin);
+        url.searchParams.append('Fecha', fechaFormateada);
+        url.searchParams.append('UsuarioWeb', finalUsuarioWeb);
+
+        if (idDispositivo) {
+            url.searchParams.append('IdDispositivo', idDispositivo);
+        }
+
+        console.log('🌐 Fetching logs:', url.toString());
+
+        const response = await fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        console.log('📡 Respuesta de API:', response.status);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('📦 Logs recibidos:', data.Data?.length || 0, 'transacciones');
 
         return data;
 
     } catch (error) {
-        // Si es un error de red
-        if (error.name === 'TypeError' && error.message.includes('fetch')) {
-            throw new Error('Error de conexión. Verifica tu conexión a internet.');
-        }
-        
-        // Re-lanzar el error para que lo maneje el formulario
+        console.error('❌ Error fetching logs:', error);
         throw error;
     }
 }
 
-/**
- * Verificar token con el servidor
- * @returns {Promise<boolean>} - True si el token es válido
- */
-async function verifyToken() {
-    const token = getAuthToken();
-    if (!token) return false;
+// ============================================
+// OBTENER SUMMARY/KPIs
+// ============================================
 
+async function fetchTransactionSummary(fecha = null, usuarioWeb = null, idDispositivo = null) {
     try {
-        const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.verify}`, {
+        const userData = getUserData();
+        if (!userData) {
+            throw new Error('Usuario no autenticado');
+        }
+
+        const finalUsuarioWeb = usuarioWeb || userData.email;
+        const finalFecha = fecha || new Date().toISOString().split('T')[0];
+
+        // Formatear fecha con hora para la API summary
+        const fechaFormateada = formatDateForApi(finalFecha);
+
+        const url = new URL(API_CONFIG.endpoints.summary, window.location.origin);
+        url.searchParams.append('Fecha', fechaFormateada);
+        url.searchParams.append('UsuarioWeb', finalUsuarioWeb);
+
+        if (idDispositivo) {
+            url.searchParams.append('IdDispositivo', idDispositivo);
+        }
+
+        console.log('📈 Fetching summary:', url.toString());
+
+        const response = await fetch(url.toString(), {
             method: 'GET',
             headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
+                'Accept': 'application/json'
             }
         });
 
+        console.log('📡 Respuesta Summary API:', response.status);
+
         if (!response.ok) {
-            // Token inválido, limpiar sesión
-            clearSession();
-            return false;
+            throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
-        
-        // Actualizar datos del usuario si vienen en la respuesta
-        if (data.user || data.usuario) {
-            const userData = data.user || data.usuario;
-            saveUserData({
-                username: userData.username || userData.nombreUsuario,
-                email: userData.email || userData.correo,
-                role: userData.role || userData.rol,
-                fullName: userData.fullName || userData.nombreCompleto,
-                id: userData.id || userData.usuarioId
-            });
-        }
+        console.log('📦 Summary recibido:', data.Data);
 
-        return true;
+        return data;
 
     } catch (error) {
-        console.error('Error verificando token:', error);
-        return false;
-    }
-}
-
-/**
- * Refrescar token (útil para tokens que expiran)
- * @returns {Promise<boolean>} - True si se refrescó correctamente
- */
-async function refreshToken() {
-    const token = getAuthToken();
-    if (!token) return false;
-
-    try {
-        const response = await fetch(`${API_CONFIG.baseURL}${API_CONFIG.endpoints.refresh}`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${token}`,
-                'Content-Type': 'application/json'
-            }
-        });
-
-        if (!response.ok) {
-            return false;
-        }
-
-        const data = await response.json();
-        
-        if (data.token) {
-            const remember = !!localStorage.getItem('authToken');
-            saveAuthToken(data.token, remember);
-            return true;
-        }
-
-        return false;
-
-    } catch (error) {
-        console.error('Error refrescando token:', error);
-        return false;
-    }
-}
-
-/**
- * Añadir token a las peticiones fetch
- * @param {string} url - URL de la petición
- * @param {object} options - Opciones de fetch
- * @returns {Promise<Response>} - Respuesta de fetch
- */
-async function authenticatedFetch(url, options = {}) {
-    const token = getAuthToken();
-    
-    if (!token) {
-        throw new Error('No hay token de autenticación');
-    }
-
-    // Preparar headers
-    const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        ...options.headers,
-        'Authorization': `Bearer ${token}`
-    };
-
-    try {
-        const response = await fetch(url, {
-            ...options,
-            headers
-        });
-
-        // Si recibimos 401, el token expiró
-        if (response.status === 401) {
-            // Intentar refrescar el token
-            const refreshed = await refreshToken();
-            
-            if (refreshed) {
-                // Reintentar la petición con el nuevo token
-                headers.Authorization = `Bearer ${getAuthToken()}`;
-                return await fetch(url, {
-                    ...options,
-                    headers
-                });
-            } else {
-                // No se pudo refrescar, cerrar sesión
-                clearSession();
-                window.location.href = '/login.html';
-                throw new Error('Sesión expirada. Por favor inicia sesión nuevamente.');
-            }
-        }
-
-        return response;
-
-    } catch (error) {
+        console.error('❌ Error fetching summary:', error);
         throw error;
     }
 }
 
-/**
- * Hacer peticiones GET autenticadas
- * @param {string} url - URL del endpoint
- * @returns {Promise<any>} - Datos de la respuesta
- */
-async function apiGet(url) {
-    const response = await authenticatedFetch(url, {
-        method: 'GET'
-    });
+// ============================================
+// PROCESAR DATOS
+// ============================================
 
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || `Error ${response.status}`);
+function processTransactionData(apiData) {
+    if (!apiData || !apiData.Data || !Array.isArray(apiData.Data)) {
+        return [];
     }
 
-    return await response.json();
+    return apiData.Data.map(t => ({
+        id: t.Id,
+        idDispositivo: t.IdDispositivo,
+        nombreDvr: (t.NombreDvr || '').trim(),
+        numeroCamara: t.NumeroCamara,
+        clientId: t.ClientId,
+        cashierId: t.CashierId,
+        reason: t.Reason,
+        events: t.Events,
+        duration: t.Duration,
+        startTime: t.StartTime,
+        endTime: t.EndTime,
+        paymentMethod: t.PaymentMethod,
+        type: t.Type,
+        logDate: t.LogDate,
+        createdAt: t.CreatedAt
+    }));
 }
 
-/**
- * Hacer peticiones POST autenticadas
- * @param {string} url - URL del endpoint
- * @param {object} data - Datos a enviar
- * @returns {Promise<any>} - Datos de la respuesta
- */
-async function apiPost(url, data) {
-    const response = await authenticatedFetch(url, {
-        method: 'POST',
-        body: JSON.stringify(data)
-    });
+// ============================================
+// CALCULAR KPIS
+// ============================================
 
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || `Error ${response.status}`);
+function calculateKPIs(transactions) {
+    if (!Array.isArray(transactions) || transactions.length === 0) {
+        return {
+            total: 0,
+            normal: 0,
+            anomalias: 0,
+            patronNoReconocido: 0,
+            sinMetodoPago: 0,
+            cajaAbierta: 0,
+            avgDuration: 0,
+            pagoTarjeta: 0,
+            pagoEfectivo: 0,
+            otros: 0
+        };
     }
 
-    return await response.json();
+    const total = transactions.length;
+    const normal = transactions.filter(t => t.type === 'Normal').length;
+    const patronNoReconocido = transactions.filter(t => t.type === 'Patrón No Reconocido').length;
+    const sinMetodoPago = transactions.filter(t => t.type === 'Transacción Sin Método de Pago').length;
+    const cajaAbierta = transactions.filter(t => t.type === 'Caja Abierta Sin Pago').length;
+    const anomalias = patronNoReconocido + sinMetodoPago + cajaAbierta;
+
+    const pagoTarjeta = transactions.filter(t => t.paymentMethod === 'pago_tarjeta').length;
+    const pagoEfectivo = transactions.filter(t => 
+        ['pago_efectivo', 'caja_abierta'].includes(t.paymentMethod)
+    ).length;
+    const otros = total - pagoTarjeta - pagoEfectivo;
+
+    const totalDuration = transactions.reduce((sum, t) => sum + (t.duration || 0), 0);
+    const avgDuration = total > 0 ? totalDuration / total : 0;
+
+    return {
+        total,
+        normal,
+        anomalias,
+        patronNoReconocido,
+        sinMetodoPago,
+        cajaAbierta,
+        avgDuration,
+        pagoTarjeta,
+        pagoEfectivo,
+        otros
+    };
 }
 
-/**
- * Hacer peticiones PUT autenticadas
- * @param {string} url - URL del endpoint
- * @param {object} data - Datos a enviar
- * @returns {Promise<any>} - Datos de la respuesta
- */
-async function apiPut(url, data) {
-    const response = await authenticatedFetch(url, {
-        method: 'PUT',
-        body: JSON.stringify(data)
-    });
+// ============================================
+// EXPORTAR
+// ============================================
 
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || `Error ${response.status}`);
-    }
-
-    return await response.json();
-}
-
-/**
- * Hacer peticiones DELETE autenticadas
- * @param {string} url - URL del endpoint
- * @returns {Promise<any>} - Datos de la respuesta
- */
-async function apiDelete(url) {
-    const response = await authenticatedFetch(url, {
-        method: 'DELETE'
-    });
-
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || `Error ${response.status}`);
-    }
-
-    return await response.json();
-}
-
-// Exportar funciones para uso global
 if (typeof window !== 'undefined') {
     window.auth = {
-        // Configuración
         config: API_CONFIG,
-        
-        // Funciones básicas
         isAuthenticated,
-        getAuthToken,
-        saveAuthToken,
-        saveUserData,
         getUserData,
+        saveUserData,
         clearSession,
         logout,
-        requireAuth,
-        
-        // Autenticación
         login,
-        verifyToken,
-        refreshToken,
-        
-        // Peticiones autenticadas
-        authenticatedFetch,
-        apiGet,
-        apiPost,
-        apiPut,
-        apiDelete
+        fetchTransactionLogs,
+        fetchTransactionSummary,
+        processTransactionData,
+        calculateKPIs,
+        formatDateForApi
     };
+
+    console.log('✅ Auth system loaded');
 }

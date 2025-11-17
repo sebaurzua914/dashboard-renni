@@ -5,97 +5,161 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Korex - Iniciar Sesión</title>
     <link href="/css/output.css" rel="stylesheet">
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
-        .login-gradient {
-            background: linear-gradient(135deg, #e6f3ff 0%, #f0f8ff 50%, #fef7f0 100%);
-            min-height: 100vh;
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
         }
-        
+
+        .login-gradient {
+            background: linear-gradient(135deg, #1e3a8a 0%, #1e293b 50%, #0f172a 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-gradient::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(37, 99, 235, 0.15) 0%, transparent 50%);
+            animation: gradientShift 15s ease infinite;
+        }
+
+        @keyframes gradientShift {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
         .dark .login-gradient {
-            background: linear-gradient(135deg, #2d3748 0%, #4a5568 50%, #553c9a 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         }
 
         .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 1.5rem;
-            padding: 3rem;
-            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.05);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            max-width: 450px;
+            max-width: 480px;
             width: 100%;
+            animation: slideUp 0.6s ease-out;
+            position: relative;
+            z-index: 10;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .dark .login-card {
-            background: rgba(31, 41, 55, 0.95);
+            background: rgba(15, 23, 42, 0.95);
             border-color: rgba(55, 65, 81, 0.3);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(59, 130, 246, 0.1) inset;
         }
 
         .input-group {
             position: relative;
-            margin-bottom: 1.5rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.3px;
+        }
+
+        .dark .input-group label {
+            color: #e5e7eb;
         }
 
         .input-group input {
             width: 100%;
-            padding: 1rem 1rem 1rem 3rem;
-            border: 2px solid transparent;
-            border-radius: 0.75rem;
-            background: rgba(249, 250, 251, 0.9);
-            color: #111827;
+            padding: 0.875rem 1rem 0.875rem 3rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #0f172a;
             font-size: 0.95rem;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-sizing: border-box;
         }
 
         .input-group input:focus {
             outline: none;
             border-color: #3b82f6;
             background: white;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-            transform: translateY(-2px);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            transform: translateY(-1px);
         }
 
         .dark .input-group input {
-            background: rgba(55, 65, 81, 0.9);
-            color: #f3f4f6;
+            background: #1e293b;
+            border-color: #334155;
+            color: #f1f5f9;
         }
 
         .dark .input-group input:focus {
-            border-color: #60a5fa;
-            background: rgba(55, 65, 81, 1);
-            box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.1);
+            border-color: #3b82f6;
+            background: #1e293b;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
         }
 
         .input-icon {
             position: absolute;
             left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9ca3af;
+            bottom: 0.875rem;
+            color: #64748b;
             pointer-events: none;
+            font-size: 1.1rem;
         }
 
         .dark .input-icon {
-            color: #6b7280;
+            color: #94a3b8;
+        }
+
+        .input-group input:focus ~ .input-icon {
+            color: #3b82f6;
         }
 
         .btn-login {
             width: 100%;
             padding: 1rem;
             border: none;
-            border-radius: 0.75rem;
-            background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%);
+            border-radius: 12px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
             color: white;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 1rem;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
         }
 
         .btn-login:before {
@@ -111,7 +175,8 @@
 
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.5);
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
         }
 
         .btn-login:hover:before {
@@ -123,7 +188,7 @@
         }
 
         .btn-login:disabled {
-            opacity: 0.6;
+            opacity: 0.7;
             cursor: not-allowed;
             transform: none;
         }
@@ -136,72 +201,98 @@
         }
 
         .logo-icon {
-            width: 4rem;
-            height: 4rem;
-            background: linear-gradient(135deg, #a8c8ec 0%, #c8a8e9 100%);
-            border-radius: 1rem;
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 30px rgba(59, 130, 246, 0.4);
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .logo-icon img {
+            width: 50px;
+            height: 50px;
+            object-fit: contain;
+        }
+
+        .logo-icon i {
+            font-size: 2.5rem;
+            color: white;
         }
 
         .error-message {
-            background: rgba(239, 68, 68, 0.1);
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
             border-left: 4px solid #ef4444;
-            color: #dc2626;
+            color: #991b1b;
             padding: 1rem;
-            border-radius: 0.5rem;
+            border-radius: 12px;
             margin-bottom: 1.5rem;
             display: none;
             animation: slideIn 0.3s ease-out;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
         .dark .error-message {
-            background: rgba(239, 68, 68, 0.2);
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.2) 100%);
             color: #fca5a5;
         }
 
         @keyframes slideIn {
             from {
                 opacity: 0;
-                transform: translateX(-20px);
+                transform: translateY(-10px);
             }
             to {
                 opacity: 1;
-                transform: translateX(0);
+                transform: translateY(0);
             }
         }
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
-            20%, 40%, 60%, 80% { transform: translateX(10px); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-8px); }
+            20%, 40%, 60%, 80% { transform: translateX(8px); }
         }
 
         .checkbox-container {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            justify-content: space-between;
             margin-bottom: 1.5rem;
         }
 
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
         .checkbox-container input[type="checkbox"] {
-            width: 1.25rem;
-            height: 1.25rem;
+            width: 18px;
+            height: 18px;
             cursor: pointer;
             accent-color: #3b82f6;
         }
 
         .checkbox-container label {
-            color: #6b7280;
+            color: #64748b;
             font-size: 0.875rem;
             cursor: pointer;
             user-select: none;
+            margin: 0;
         }
 
         .dark .checkbox-container label {
-            color: #9ca3af;
+            color: #94a3b8;
         }
 
         .forgot-password {
@@ -213,6 +304,7 @@
             color: #3b82f6;
             text-decoration: none;
             font-size: 0.875rem;
+            font-weight: 600;
             transition: color 0.3s ease;
         }
 
@@ -229,172 +321,194 @@
             color: #93c5fd;
         }
 
+        .forgot-link {
+            font-size: 0.875rem;
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.2s;
+        }
+
+        .forgot-link:hover {
+            color: #2563eb;
+        }
+
         .password-toggle {
             position: absolute;
             right: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
+            bottom: 0.875rem;
             cursor: pointer;
-            color: #9ca3af;
+            color: #64748b;
             transition: color 0.3s ease;
+            font-size: 1.1rem;
         }
 
         .password-toggle:hover {
-            color: #6b7280;
+            color: #3b82f6;
         }
 
         .dark .password-toggle:hover {
-            color: #d1d5db;
+            color: #60a5fa;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+            vertical-align: middle;
+            margin-right: 0.5rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 640px) {
+            .login-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .logo-icon {
+                width: 70px;
+                height: 70px;
+            }
+
+            .logo-icon i {
+                font-size: 2rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Theme Toggle Button (positioned at top right) -->
     <div class="fixed top-4 right-4 z-50">
-        <button id="theme-toggle" class="p-3 rounded-lg bg-white dark:bg-gray-700 shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105">
-            <span data-lucide="moon" class="w-5 h-5 dark:hidden text-gray-600"></span>
-            <span data-lucide="sun" class="w-5 h-5 hidden dark:block text-yellow-500"></span>
+        <button id="theme-toggle" class="p-3 rounded-xl bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110">
+            <i id="theme-icon-moon" class="fas fa-moon dark:hidden text-gray-700 text-lg"></i>
+            <i id="theme-icon-sun" class="fas fa-sun hidden dark:block text-yellow-400 text-lg"></i>
         </button>
     </div>
 
     <div class="login-gradient flex items-center justify-center p-4">
-        <div class="login-card animate-fadeIn">
-            <!-- Logo -->
+        <div class="login-card">
             <div class="logo-container">
                 <div class="logo-icon">
-                    <img src="/img/logo.png" alt="Korex Logo" class="w-10 h-10" style="align-self: stretch;">
+                    <img src="/img/Logo.png" alt="Korex Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                    <i class="fas fa-eye" style="display: none;"></i>
                 </div>
             </div>
 
-            <!-- Title -->
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-2">
-                    Bienvenido a Korex
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
+                    Bienvenido de vuelta
                 </h1>
-                <p class="text-gray-500 dark:text-gray-400 text-sm">
-                    Dashboard de Ventas - Inicia sesión para continuar
+                <p class="text-gray-600 dark:text-gray-400 text-sm">
+                    Ingresa tus credenciales para acceder al dashboard
                 </p>
             </div>
 
-            <!-- Error Message -->
             <div id="error-message" class="error-message">
                 <div class="flex items-center gap-2">
-                    <span data-lucide="alert-circle" class="w-5 h-5"></span>
+                    <i class="fas fa-exclamation-triangle"></i>
                     <span id="error-text">Error al iniciar sesión</span>
                 </div>
             </div>
 
-            <!-- Login Form -->
             <form id="login-form">
-                <!-- Usuario Input -->
                 <div class="input-group">
-                    <span class="input-icon" data-lucide="user"></span>
-                    <input 
-                        type="text" 
-                        id="username" 
-                        name="username" 
-                        placeholder="Usuario" 
-                        required
-                        autocomplete="username"
-                    >
+                    <label for="username">Usuario o Email</label>
+                    <div style="position: relative;">
+                        <input 
+                            type="text" 
+                            id="username" 
+                            name="username" 
+                            placeholder="Ingresa tu usuario" 
+                            required
+                            autocomplete="username"
+                            value="seba@korex.cl"
+                        >
+                        <i class="fas fa-user input-icon"></i>
+                    </div>
                 </div>
 
-                <!-- Contraseña Input -->
                 <div class="input-group">
-                    <span class="input-icon" data-lucide="lock"></span>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        placeholder="Contraseña" 
-                        required
-                        autocomplete="current-password"
-                    >
-                    <span class="password-toggle" id="toggle-password" data-lucide="eye"></span>
+                    <label for="password">Contraseña</label>
+                    <div style="position: relative;">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            placeholder="Ingresa tu contraseña" 
+                            required
+                            autocomplete="current-password"
+                            value="seba"
+                        >
+                        <i class="fas fa-lock input-icon"></i>
+                        <i id="toggle-password" class="fas fa-eye password-toggle"></i>
+                    </div>
                 </div>
 
-                <!-- Recordar sesión -->
                 <div class="checkbox-container">
-                    <input 
-                        type="checkbox" 
-                        id="remember" 
-                        name="remember"
-                    >
-                    <label for="remember">Recordar mi sesión</label>
+                    <div class="checkbox-wrapper">
+                        <input 
+                            type="checkbox" 
+                            id="remember" 
+                            name="remember"
+                            checked
+                        >
+                        <label for="remember">Recordarme</label>
+                    </div>
+                    <a href="#" class="forgot-link" id="forgot-password-link">¿Olvidaste tu contraseña?</a>
                 </div>
 
-                <!-- Login Button -->
                 <button type="submit" class="btn-login" id="login-btn">
                     <span id="btn-text">Iniciar Sesión</span>
                     <span id="btn-loading" style="display: none;">
-                        <span data-lucide="loader" class="w-5 h-5 inline-block animate-spin"></span>
-                        Iniciando sesión...
+                        <span class="loading-spinner"></span>
+                        Iniciando...
                     </span>
                 </button>
-
-                <!-- Forgot Password -->
-                <div class="forgot-password">
-                    <a href="#" id="forgot-password-link">¿Olvidaste tu contraseña?</a>
-                </div>
             </form>
 
-            <!-- Footer -->
-            <div class="text-center mt-8 pt-6 border-t border-gray-200 dark:border-gray-600">
+            <div class="text-center mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
                 <p class="text-xs text-gray-500 dark:text-gray-400">
-                    Korex Dashboard v1.4 © 2025 All rights reserved.
+                    Korex Dashboard © 2025 - Todos los derechos reservados
                 </p>
             </div>
         </div>
     </div>
 
-    <!-- Auth.js system -->
+    <!-- ⚠️ CAMBIO IMPORTANTE: Ruta corregida -->
     <script src="/js/auth.js"></script>
-    
+
     <script>
-        // Initialize Lucide icons
-        lucide.createIcons();
-
-        // Redirect if already authenticated
-        if (window.auth && window.auth.isAuthenticated()) {
-            window.location.href = '/index.html';
-        }
-
         // Theme toggle logic
         const themeToggle = document.getElementById('theme-toggle');
         const htmlElement = document.documentElement;
 
-        // Check for saved theme preference
         const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            htmlElement.classList.add(savedTheme);
-        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        if (savedTheme === 'dark') {
+            htmlElement.classList.add('dark');
+        } else if (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches) {
             htmlElement.classList.add('dark');
         }
 
         themeToggle.addEventListener('click', () => {
-            if (htmlElement.classList.contains('dark')) {
-                htmlElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-            } else {
-                htmlElement.classList.add('dark');
-                localStorage.setItem('theme', 'dark');
-            }
-            lucide.createIcons();
+            htmlElement.classList.toggle('dark');
+            localStorage.setItem('theme', htmlElement.classList.contains('dark') ? 'dark' : 'light');
         });
 
         // Password toggle visibility
         const togglePassword = document.getElementById('toggle-password');
         const passwordInput = document.getElementById('password');
+        let passwordVisible = false;
 
         togglePassword.addEventListener('click', () => {
-            const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordInput.setAttribute('type', type);
-            
-            // Change icon
-            togglePassword.innerHTML = '';
-            const iconName = type === 'password' ? 'eye' : 'eye-off';
-            togglePassword.setAttribute('data-lucide', iconName);
-            lucide.createIcons();
+            passwordVisible = !passwordVisible;
+            passwordInput.type = passwordVisible ? 'text' : 'password';
+            togglePassword.className = passwordVisible ? 'fas fa-eye-slash password-toggle' : 'fas fa-eye password-toggle';
         });
 
         // Form submission
@@ -407,51 +521,61 @@
 
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            // Hide error message
+
             errorMessage.style.display = 'none';
-            
-            // Show loading state
+
             loginBtn.disabled = true;
             btnText.style.display = 'none';
             btnLoading.style.display = 'inline-block';
-            lucide.createIcons();
 
-            // Get form data
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             const remember = document.getElementById('remember').checked;
 
             try {
-                // Use the auth system to login
-                if (window.auth) {
-                    const data = await window.auth.login(username, password, remember);
-                    // Redirect to dashboard
-                    window.location.href = '/index.html';
-                } else {
+                if (!window.auth) {
                     throw new Error('Sistema de autenticación no disponible');
                 }
 
+                console.log('🔐 Iniciando login...');
+
+                // Hacer login
+                const result = await window.auth.login(username, password, remember);
+                console.log('✅ Login exitoso:', result);
+
+                // ⚠️ IMPORTANTE: Esperar un momento para que se guarden los datos
+                await new Promise(resolve => setTimeout(resolve, 200));
+
+                // Verificar que los datos se guardaron correctamente
+                const userData = window.auth.getUserData();
+                console.log('🔍 Verificando datos guardados:', userData);
+
+                if (!userData || !userData.isLoggedIn) {
+                    throw new Error('Error al guardar datos de sesión');
+                }
+
+                console.log('✅ Datos verificados correctamente');
+                console.log('✅ Redirigiendo al dashboard...');
+
+                // ⚠️ Usar replace para evitar que el usuario vuelva atrás al login
+                window.location.replace('/index.html');
+
             } catch (error) {
-                // Show error message
+                console.error('❌ Error en login:', error);
                 errorText.textContent = error.message || 'Usuario o contraseña incorrectos';
                 errorMessage.style.display = 'block';
-                lucide.createIcons();
 
-                // Reset button state
                 loginBtn.disabled = false;
                 btnText.style.display = 'inline';
                 btnLoading.style.display = 'none';
 
-                // Shake animation for error
-                loginForm.style.animation = 'none';
+                loginForm.style.animation = 'shake 0.5s';
                 setTimeout(() => {
-                    loginForm.style.animation = 'shake 0.5s';
-                }, 10);
+                    loginForm.style.animation = '';
+                }, 500);
             }
         });
 
-        // Forgot password link
         document.getElementById('forgot-password-link').addEventListener('click', (e) => {
             e.preventDefault();
             alert('Por favor contacta al administrador del sistema para recuperar tu contraseña.');
