@@ -84,27 +84,32 @@ app.post('/api/login', upload.none(), async (req, res) => {
         });
     }
 });
+
 // ============================================
 // PROXY PARA OBTENER SUMMARY (KPIs)
 // GET https://cloud.korex.cl/api/camera/summary/
-// Body: x-www-form-urlencoded (Fecha)
+// Body: x-www-form-urlencoded (Fecha, UsuarioWeb, IdDispositivo)
 // ============================================
 app.get('/api/summary', async (req, res) => {
     try {
         console.log('\n📥 ===== SUMMARY REQUEST =====');
-        const { Fecha } = req.query;
-        console.log('Query params recibidos en backend:', { Fecha });
+        const { Fecha, UsuarioWeb, IdDispositivo } = req.query;
+        console.log('Query params recibidos en backend:', { Fecha, UsuarioWeb, IdDispositivo });
 
-        if (!Fecha) {
+        if (!Fecha || !UsuarioWeb) {
             return res.status(400).json({
                 Success: false,
-                Message: 'Fecha es obligatoria'
+                Message: 'Fecha y UsuarioWeb son obligatorios'
             });
         }
 
         // Body x-www-form-urlencoded
         const params = new URLSearchParams();
         params.append('Fecha', Fecha);
+        params.append('UsuarioWeb', UsuarioWeb);
+        if (IdDispositivo) {
+            params.append('IdDispositivo', IdDispositivo);
+        }
 
         const bodyString = params.toString();
         console.log('🔄 Fetching: https://cloud.korex.cl/api/camera/summary/');
@@ -156,6 +161,7 @@ app.get('/api/summary', async (req, res) => {
         }
 
         console.log('📊 Objeto summary parseado:', data);
+        console.log('👤 KPIs para usuario:', UsuarioWeb);
 
         if (apiResponse.statusCode !== 200 || data.Success === false) {
             return res.status(400).json({
@@ -283,6 +289,93 @@ app.get('/api/logs', async (req, res) => {
 });
 
 // ============================================
+// PROXY PARA DVR PAYMENTS (NUEVO)
+// POST https://cloud.korex.cl/Api/Job/SolicitarDvrListaPago?CorreoUsuaWeb=xxx
+// ============================================
+app.get('/api/dvr-payments', async (req, res) => {
+    try {
+        console.log('\n📥 ===== DVR PAYMENTS REQUEST =====');
+        const usuarioWeb = req.query.usuarioWeb || req.query.CorreoUsuaWeb;
+
+        console.log('Query params recibidos:', { usuarioWeb });
+
+        if (!usuarioWeb) {
+            console.error('❌ Falta usuarioWeb');
+            return res.status(400).json({
+                success: false,
+                message: 'Parámetro usuarioWeb es obligatorio'
+            });
+        }
+
+        const apiUrl = `https://cloud.korex.cl/Api/Job/SolicitarDvrListaPago?CorreoUsuaWeb=${encodeURIComponent(usuarioWeb)}`;
+        console.log('🔄 Fetching:', apiUrl);
+
+        const options = {
+            hostname: 'cloud.korex.cl',
+            path: `/Api/Job/SolicitarDvrListaPago?CorreoUsuaWeb=${encodeURIComponent(usuarioWeb)}`,
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'User-Agent': 'Korex-Dashboard/1.0',
+                'Cache-Control': 'no-cache'
+            }
+        };
+
+        const apiResponse = await new Promise((resolve, reject) => {
+            const request = https.request(options, (response) => {
+                let data = '';
+                response.on('data', chunk => data += chunk);
+                response.on('end', () => {
+                    resolve({
+                        statusCode: response.statusCode,
+                        statusMessage: response.statusMessage,
+                        body: data
+                    });
+                });
+            });
+
+            request.on('error', reject);
+            request.end();
+        });
+
+        console.log('📡 Respuesta de API:', apiResponse.statusCode, apiResponse.statusMessage);
+        console.log('📦 Raw body (primero 500 chars):', apiResponse.body.substring(0, 500));
+
+        let data;
+        try {
+            data = JSON.parse(apiResponse.body);
+        } catch (e) {
+            console.error('❌ No se pudo parsear JSON desde DVR Payments API');
+            return res.status(500).json({
+                success: false,
+                message: 'Respuesta no válida desde API DVR Payments'
+            });
+        }
+
+        console.log('📊 DVR Payments parseado:', data);
+
+        if (apiResponse.statusCode !== 200) {
+            return res.status(apiResponse.statusCode).json({
+                success: false,
+                message: data.message || data.Message || 'Error al obtener DVR payments'
+            });
+        }
+
+        console.log('✅ DVR Payments recibidos:', data.data?.length || data.Data?.length || 0, 'DVRs');
+        return res.json(data);
+
+    } catch (error) {
+        console.error('❌ Error en /api/dvr-payments:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener DVR payments',
+            error: error.message
+        });
+    }
+});
+
+// ============================================
 // HEALTH CHECK
 // ============================================
 app.get('/api/health', (req, res) => {
@@ -329,6 +422,7 @@ app.listen(PORT, () => {
     console.log(`🌐 URL: http://localhost:${PORT}`);
     console.log(`🔐 Login: http://localhost:${PORT}/login.html`);
     console.log(`📊 Dashboard: http://localhost:${PORT}/index.html`);
+    console.log(`👤 Perfil: http://localhost:${PORT}/perfil.html`);
     console.log('='.repeat(60) + '\n');
 });
 

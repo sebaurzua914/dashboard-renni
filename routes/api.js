@@ -242,6 +242,67 @@ router.get('/summary', async (req, res) => {
     }
 });
 
+// ===== PROXY PARA OBTENER LISTA DE DVRS Y PAGOS =====
+router.get('/dvr-payments', async (req, res) => {
+    try {
+        console.log('💳 Recibiendo petición de DVR pagos:', req.query);
+        
+        const { usuarioWeb } = req.query;
+        
+        // Validar parámetros mínimos
+        if (!usuarioWeb) {
+            return res.status(400).json({
+                success: false,
+                message: 'UsuarioWeb es requerido'
+            });
+        }
+
+        // Construir URL para la API de DVR pagos
+        const url = new URL('https://cloud.korex.cl/Api/Job/SolicitarDvrListaPago');
+        url.searchParams.append('CorreoUsuaWeb', usuarioWeb);
+
+        console.log('📤 Enviando a API Korex DVR pagos:', url.toString());
+
+        const response = await fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'User-Agent': 'Korex-Dashboard/1.0'
+            }
+        });
+
+        console.log('📡 Respuesta de DVR pagos:', response.status, response.statusText);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('📦 DVR pagos recibidos:', { 
+            success: data.Success || data.success, 
+            count: Array.isArray(data.Data || data.data) ? (data.Data || data.data).length : 'No array'
+        });
+
+        // Normalizar respuesta
+        const normalizedResponse = {
+            Success: data.Success || data.success || true,
+            Message: data.Message || data.message || 'DVR pagos obtenidos exitosamente',
+            Data: data.Data || data.data || data
+        };
+
+        res.status(200).json(normalizedResponse);
+
+    } catch (error) {
+        console.error('❌ Error en proxy de DVR pagos:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener lista de DVRs y pagos',
+            error: error.message
+        });
+    }
+});
+
 // ===== HEALTH CHECK =====
 router.get('/health', async (req, res) => {
   try {

@@ -5,6 +5,7 @@ class ModernDashboard {
         this.transactions = [];
         this.filteredTransactions = [];
         this.kpiData = null;
+        this.dvrList = [];
         this.currentPage = 1;
         this.itemsPerPage = 10;
         this.selectedDate = new Date().toISOString().split('T')[0];
@@ -27,53 +28,138 @@ class ModernDashboard {
         console.log('✅ Usuario autenticado:', userData.email);
 
         this.setupUI(userData);
+        this.setupProfileHeader(userData);
         this.setupEventListeners();
+        this.setupProfileDropdown();
         
         // Cargar datos iniciales
         await this.loadAllData();
     }
 
     setupUI(userData) {
-        // Actualizar información del usuario en el header
-        const userInfoElements = [
-            document.getElementById('user-info'),
-            document.querySelector('[data-user-name]'),
-            document.querySelector('.user-display-name')
-        ];
-
-        userInfoElements.forEach(element => {
-            if (element) {
-                element.textContent = userData.fullName || userData.email.split('@')[0];
+        // Configurar fecha inicial
+        const datePickers = document.querySelectorAll('#date-picker, #date-picker-mobile');
+        datePickers.forEach(picker => {
+            if (picker) {
+                picker.value = this.selectedDate;
             }
         });
-
-        // Configurar fecha inicial
-        const datePicker = document.getElementById('date-picker');
-        if (datePicker) {
-            datePicker.value = this.selectedDate;
-        }
 
         // Ocultar overlay de carga
         this.hideGlobalLoading();
     }
 
-    setupEventListeners() {
-        // Selector de fecha
-        const datePicker = document.getElementById('date-picker');
-        if (datePicker) {
-            datePicker.addEventListener('change', (e) => {
-                this.selectedDate = e.target.value;
-                this.loadAllData();
-            });
+    setupProfileHeader(userData) {
+        const fullName = userData.fullName || userData.email.split('@')[0];
+        const email = userData.email;
+
+        // Calcular iniciales
+        const initials = fullName
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .substring(0, 2)
+            .toUpperCase();
+
+        console.log('👤 Configurando perfil:', { fullName, email, initials });
+
+        // Actualizar nombre en el botón del perfil
+        const displayNameEl = document.getElementById('user-display-name');
+        if (displayNameEl) {
+            displayNameEl.textContent = fullName;
         }
 
-        // Filtros de búsqueda
-        const searchInput = document.getElementById('search-input');
-        if (searchInput) {
-            searchInput.addEventListener('input', this.debounce(() => {
-                this.applyFilters();
-            }, 300));
+        // Actualizar email en el botón del perfil
+        const displayEmailEl = document.getElementById('user-display-email');
+        if (displayEmailEl) {
+            displayEmailEl.textContent = email;
         }
+
+        // Actualizar nombre en el dropdown
+        const dropdownNameEl = document.getElementById('dropdown-user-name');
+        if (dropdownNameEl) {
+            dropdownNameEl.textContent = fullName;
+        }
+
+        // Actualizar email en el dropdown
+        const dropdownEmailEl = document.getElementById('dropdown-user-email');
+        if (dropdownEmailEl) {
+            dropdownEmailEl.textContent = email;
+        }
+
+        // Actualizar avatar con iniciales
+        const avatarEl = document.getElementById('profile-avatar-initials');
+        if (avatarEl) {
+            avatarEl.textContent = initials;
+        }
+
+        console.log('✅ Perfil configurado correctamente');
+    }
+
+    setupProfileDropdown() {
+        const profileButton = document.getElementById('profile-button');
+        const profileDropdown = document.getElementById('profile-dropdown');
+
+        console.log('🔧 Configurando dropdown del perfil...');
+        console.log('profileButton:', !!profileButton, 'profileDropdown:', !!profileDropdown);
+
+        if (profileButton && profileDropdown) {
+            // Toggle dropdown al hacer click en el botón
+            profileButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('🟣 Click en profile-button (dashboard)');
+                profileDropdown.classList.toggle('show');
+                console.log('🔄 Clase show:', profileDropdown.classList.contains('show'));
+            });
+
+            // Cerrar dropdown al hacer click fuera
+            document.addEventListener('click', (e) => {
+                if (!profileButton.contains(e.target) && !profileDropdown.contains(e.target)) {
+                    if (profileDropdown.classList.contains('show')) {
+                        console.log('⬅️ Click fuera, cerrando dropdown');
+                        profileDropdown.classList.remove('show');
+                    }
+                }
+            });
+
+            // Cerrar con ESC
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && profileDropdown.classList.contains('show')) {
+                    console.log('⬅️ ESC presionado, cerrando dropdown');
+                    profileDropdown.classList.remove('show');
+                }
+            });
+
+            console.log('✅ Dropdown configurado correctamente');
+        } else {
+            console.warn('⚠️ No se encontró profileButton o profileDropdown');
+        }
+    }
+
+    setupEventListeners() {
+        // Selector de fecha (puede haber múltiples)
+        const datePickers = document.querySelectorAll('#date-picker, #date-picker-mobile');
+        datePickers.forEach(picker => {
+            if (picker) {
+                picker.addEventListener('change', (e) => {
+                    this.selectedDate = e.target.value;
+                    // Sincronizar todos los date pickers
+                    datePickers.forEach(p => p.value = this.selectedDate);
+                    this.loadAllData();
+                });
+            }
+        });
+
+        // Filtros de búsqueda
+        const searchInputs = document.querySelectorAll('#search-input');
+        searchInputs.forEach(input => {
+            if (input) {
+                input.addEventListener('input', this.debounce(() => {
+                    this.applyFilters();
+                }, 300));
+            }
+        });
 
         // Filtros de tipo y pago
         ['type-filter', 'payment-filter'].forEach(filterId => {
@@ -93,11 +179,13 @@ class ModernDashboard {
         // Modal de transacciones
         this.setupModalHandlers();
 
-        // Botón de actualización
-        const refreshBtn = document.getElementById('refresh-button');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', () => this.loadAllData());
-        }
+        // Botones de actualización (desktop y mobile)
+        const refreshBtns = document.querySelectorAll('#refresh-button, #refresh-button-mobile');
+        refreshBtns.forEach(btn => {
+            if (btn) {
+                btn.addEventListener('click', () => this.loadAllData());
+            }
+        });
 
         // Botón de logout
         const logoutLink = document.getElementById('logout-link');
@@ -141,10 +229,11 @@ class ModernDashboard {
             // Mostrar indicadores de carga
             this.showLoadingStates();
 
-            // Cargar KPIs y transacciones en paralelo
-            const [kpiResponse, logsResponse] = await Promise.all([
+            // Cargar KPIs, transacciones y DVRs en paralelo
+            const [kpiResponse, logsResponse, dvrResponse] = await Promise.all([
                 this.loadKPIs(),
-                this.loadTransactions()
+                this.loadTransactions(),
+                this.loadDvrPayments()
             ]);
 
             console.log('✅ Datos cargados exitosamente');
@@ -211,6 +300,131 @@ class ModernDashboard {
         }
     }
 
+    async loadDvrPayments() {
+        try {
+            console.log('💳 Cargando lista de DVR y pagos...');
+
+            const response = await window.auth.fetchDvrPayments();
+            
+            const success = response.Success || response.success;
+            if (!success) {
+                throw new Error(response.Message || response.message || 'Error obteniendo DVRs');
+            }
+
+            const data = response.Data || response.data || [];
+            this.dvrList = Array.isArray(data) ? data : [];
+
+            console.log('💳 DVRs cargados:', this.dvrList.length);
+
+            this.renderDvrList();
+            return response;
+
+        } catch (error) {
+            console.error('❌ Error cargando DVR payments:', error);
+            this.renderDvrListError(error.message);
+        }
+    }
+
+    renderDvrList() {
+        const container = document.getElementById('dvr-list-container');
+        if (!container) {
+            console.warn('⚠️ Contenedor DVR no encontrado');
+            return;
+        }
+
+        if (!this.dvrList || this.dvrList.length === 0) {
+            container.innerHTML = `
+                <div class="col-span-full text-center py-6 text-gray-500 dark:text-gray-400">
+                    <i class="fas fa-video-slash text-3xl mb-2"></i>
+                    <p>No se encontraron DVRs asociados a este usuario.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = this.dvrList.map(dvr => this.createDvrCard(dvr)).join('');
+    }
+
+    createDvrCard(dvr) {
+        const nombre = (dvr['Nombre DVR'] || dvr['NombreDVR'] || dvr.key || '').trim();
+        const marca = dvr.Marca || 'N/A';
+        const ip = dvr.Ip || 'N/A';
+        const montoPago = dvr['Monto Pago'] ?? dvr.MontoPago ?? 0;
+        const linkPago = dvr['Link Pago'] || dvr.LinkPago || null;
+        const idDispositivo = dvr['ID Dispositivo'] || dvr.IdDispositivo || dvr.ID || '';
+
+        const tieneDeuda = Number(montoPago) > 0;
+
+        const colorCircle = tieneDeuda ? 'bg-red-500' : 'bg-green-500';
+        const textStatus = tieneDeuda ? 'Con deuda' : 'Sin deuda';
+        const statusDetail = tieneDeuda ? `Deuda: $${this.formatNumber(montoPago)}` : 'Pago al día';
+
+        const buttonClass = tieneDeuda
+            ? 'bg-red-500 hover:bg-red-600 text-white'
+            : 'bg-green-500 hover:bg-green-600 text-white cursor-default opacity-75';
+
+        const buttonText = tieneDeuda ? 'Pagar Suscripción' : 'Sin deuda';
+        const buttonIcon = tieneDeuda ? 'fa-credit-card' : 'fa-check-circle';
+
+        const hasLink = !!linkPago && tieneDeuda;
+
+        return `
+            <div class="glass-effect rounded-xl p-4 shadow-md hover:shadow-lg transition-all duration-300 flex flex-col justify-between h-full">
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-4 h-4 rounded-full ${colorCircle} shadow-lg animate-pulse"></div>
+                        <div>
+                            <h3 class="font-bold text-gray-800 dark:text-gray-100">
+                                ${nombre || 'DVR sin nombre'}
+                            </h3>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">
+                                ${marca} • ${ip}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-sm text-gray-600 dark:text-gray-300 mb-3 space-y-1">
+                    <p class="font-semibold flex items-center">
+                        <i class="fas ${tieneDeuda ? 'fa-exclamation-circle text-red-500' : 'fa-check-circle text-green-500'} mr-2"></i>
+                        ${textStatus}
+                    </p>
+                    <p class="text-xs text-gray-500">${statusDetail}</p>
+                    ${idDispositivo ? `<p class="text-xs mt-1 text-gray-400 truncate" title="${idDispositivo}">ID: ${idDispositivo}</p>` : ''}
+                </div>
+
+                <div class="mt-auto pt-2">
+                    <button
+                        class="w-full ${buttonClass} px-4 py-2 rounded-lg text-sm font-semibold flex items-center justify-center space-x-2 transition-all duration-200 ${hasLink ? 'hover:scale-105' : ''}"
+                        ${hasLink ? `onclick="window.open('${linkPago}', '_blank')"` : 'disabled'}
+                    >
+                        <i class="fas ${buttonIcon}"></i>
+                        <span>${buttonText}</span>
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    renderDvrListError(message) {
+        const container = document.getElementById('dvr-list-container');
+        if (!container) return;
+
+        container.innerHTML = `
+            <div class="col-span-full text-center py-6">
+                <i class="fas fa-exclamation-triangle text-3xl text-red-400 mb-2"></i>
+                <p class="text-red-500 mb-1">Error al cargar DVRs</p>
+                <p class="text-xs text-gray-500">${message}</p>
+                <button 
+                    onclick="window.modernDashboard.loadDvrPayments()" 
+                    class="mt-3 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm"
+                >
+                    <i class="fas fa-redo mr-2"></i>Reintentar
+                </button>
+            </div>
+        `;
+    }
+
     renderKPIs() {
         if (!this.kpiData) {
             this.renderKPIsEmpty();
@@ -226,33 +440,44 @@ class ModernDashboard {
             return;
         }
 
+        const totalTransactions = this.kpiData.TotalTransactions || 0;
+        const totalAnomalies = this.kpiData.TotalAnomalies || 0;
+        const normalTransactions = Math.max(0, totalTransactions - totalAnomalies);
+
+        const totalPagos = this.kpiData.TotalPagos || 0;
+        const totalTarjeta = this.kpiData.TotalTarjeta || 0;
+        const totalEfectivo = Math.max(0, totalPagos - totalTarjeta);
+
         const kpis = [
             {
                 title: 'Total Transacciones',
-                value: this.formatNumber(this.kpiData.TotalTransactions || 0),
+                value: this.formatNumber(totalTransactions),
                 icon: 'fas fa-exchange-alt',
                 color: 'blue',
                 bgGradient: 'from-blue-500 to-blue-600',
                 change: null,
-                description: 'Total de transacciones registradas'
+                description: 'Total de transacciones registradas',
+                filter: 'all'
             },
             {
                 title: 'Transacciones Normales',
-                value: this.formatNumber(this.kpiData.TotalNormal || 0),
+                value: this.formatNumber(normalTransactions),
                 icon: 'fas fa-check-circle',
                 color: 'green',
                 bgGradient: 'from-green-500 to-green-600',
-                change: this.calculatePercentage(this.kpiData.TotalNormal, this.kpiData.TotalTransactions),
-                description: 'Transacciones sin anomalías'
+                change: this.calculatePercentage(normalTransactions, totalTransactions),
+                description: 'Transacciones sin anomalías',
+                filter: 'normal'
             },
             {
                 title: 'Anomalías Detectadas',
-                value: this.formatNumber(this.kpiData.TotalAnomalies || 0),
+                value: this.formatNumber(totalAnomalies),
                 icon: 'fas fa-exclamation-triangle',
                 color: 'red',
                 bgGradient: 'from-red-500 to-red-600',
-                change: this.calculatePercentage(this.kpiData.TotalAnomalies, this.kpiData.TotalTransactions),
-                description: 'Transacciones con patrones anómalos'
+                change: this.calculatePercentage(totalAnomalies, totalTransactions),
+                description: 'Transacciones con patrones anómalos',
+                filter: 'anomalous'
             },
             {
                 title: 'Duración Promedio',
@@ -261,31 +486,34 @@ class ModernDashboard {
                 color: 'purple',
                 bgGradient: 'from-purple-500 to-purple-600',
                 change: null,
-                description: 'Tiempo promedio por transacción'
+                description: 'Tiempo promedio por transacción',
+                filter: null
             },
             {
                 title: 'Pagos con Tarjeta',
-                value: this.formatNumber(this.kpiData.TotalTarjeta || 0),
+                value: this.formatNumber(totalTarjeta),
                 icon: 'fas fa-credit-card',
                 color: 'indigo',
                 bgGradient: 'from-indigo-500 to-indigo-600',
-                change: this.calculatePercentage(this.kpiData.TotalTarjeta, this.kpiData.TotalPagos),
-                description: 'Pagos realizados con tarjeta'
+                change: this.calculatePercentage(totalTarjeta, totalPagos),
+                description: 'Pagos realizados con tarjeta',
+                filter: 'tarjeta'
             },
             {
                 title: 'Pagos en Efectivo',
-                value: this.formatNumber(this.kpiData.TotalEfectivo || 0),
+                value: this.formatNumber(totalEfectivo),
                 icon: 'fas fa-money-bill-wave',
                 color: 'yellow',
                 bgGradient: 'from-yellow-500 to-yellow-600',
-                change: this.calculatePercentage(this.kpiData.TotalEfectivo, this.kpiData.TotalPagos),
-                description: 'Pagos realizados en efectivo'
+                change: this.calculatePercentage(totalEfectivo, totalPagos),
+                description: 'Pagos realizados en efectivo',
+                filter: 'efectivo'
             }
         ];
 
         kpisContainer.innerHTML = kpis.map(kpi => this.createKPICard(kpi)).join('');
         
-        // Animar las tarjetas
+        this.setupKPIClickFilters(kpis);
         this.animateKPICards();
     }
 
@@ -298,8 +526,21 @@ class ModernDashboard {
             </div>
         ` : '';
 
+        const clickableClass = kpi.filter ? 'cursor-pointer hover:scale-105' : '';
+        const clickHint = kpi.filter ? `
+            <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <i class="fas fa-filter text-white text-opacity-50 text-xs"></i>
+            </div>
+        ` : '';
+
         return `
-            <div class="kpi-card bg-gradient-to-br ${kpi.bgGradient} text-white rounded-xl p-6 shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+            <div class="kpi-card group ${clickableClass} bg-gradient-to-br ${kpi.bgGradient} text-white rounded-xl p-6 shadow-lg hover:shadow-xl transform transition-all duration-300 relative" 
+                 data-filter="${kpi.filter || ''}" 
+                 data-kpi-title="${kpi.title}"
+                 ${kpi.filter ? 'title="Click para filtrar transacciones"' : ''}>
+                
+                ${clickHint}
+                
                 <div class="flex items-center justify-between mb-4">
                     <div class="p-3 bg-white bg-opacity-20 rounded-lg">
                         <i class="${kpi.icon} text-2xl"></i>
@@ -317,6 +558,64 @@ class ModernDashboard {
         `;
     }
 
+    setupKPIClickFilters(kpis) {
+        const kpiCards = document.querySelectorAll('.kpi-card[data-filter]');
+        
+        kpiCards.forEach((card, index) => {
+            const filter = card.getAttribute('data-filter');
+            if (filter && filter !== '') {
+                card.addEventListener('click', () => {
+                    this.applyKPIFilter(filter, kpis[index].title);
+                });
+            }
+        });
+    }
+
+    applyKPIFilter(filterType, kpiTitle) {
+        console.log('🎯 Aplicando filtro desde KPI:', filterType, kpiTitle);
+        
+        this.clearAllFilters();
+        
+        switch (filterType) {
+            case 'all':
+                this.filteredTransactions = [...this.transactions];
+                break;
+                
+            case 'normal':
+                this.filteredTransactions = this.transactions.filter(t => 
+                    this.getTransactionCategory(t.type) === 'normal'
+                );
+                break;
+                
+            case 'anomalous':
+                this.filteredTransactions = this.transactions.filter(t => 
+                    this.getTransactionCategory(t.type) === 'anomalous'
+                );
+                break;
+                
+            case 'tarjeta':
+                this.filteredTransactions = this.transactions.filter(t => 
+                    t.paymentMethod === 'pago_tarjeta'
+                );
+                break;
+                
+            case 'efectivo':
+                this.filteredTransactions = this.transactions.filter(t => 
+                    t.paymentMethod !== 'pago_tarjeta' && t.paymentMethod
+                );
+                break;
+                
+            default:
+                this.filteredTransactions = [...this.transactions];
+        }
+        
+        this.currentPage = 1;
+        this.renderTransactions();
+        this.updateFilterUI(filterType);
+        this.showToast(`Filtrado por: ${kpiTitle} (${this.filteredTransactions.length} resultados)`, 'info');
+        this.scrollToTransactions();
+    }
+
     renderTransactions() {
         const container = document.getElementById('transactions-list');
         if (!container) return;
@@ -332,7 +631,6 @@ class ModernDashboard {
 
         container.innerHTML = pageTransactions.map(t => this.createTransactionCard(t)).join('');
 
-        // Agregar event listeners
         pageTransactions.forEach(t => {
             const card = document.getElementById(`transaction-${t.id}`);
             if (card) {
@@ -416,7 +714,84 @@ class ModernDashboard {
         `;
     }
 
-    // Métodos auxiliares para estilos y categorización
+    showTransactionDetail(transaction) {
+        const modal = document.getElementById('transaction-modal');
+        const content = document.getElementById('modal-content');
+
+        if (!modal || !content) return;
+
+        const category = this.getTransactionCategory(transaction.type);
+        const icon = this.getTransactionIcon(transaction.type);
+
+        content.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 p-4 rounded-xl border-2 border-blue-200 dark:border-blue-600">
+                    <div class="text-sm text-blue-600 dark:text-blue-300 font-semibold mb-1">ID Transacción</div>
+                    <div class="text-2xl font-bold text-blue-800 dark:text-blue-100">${transaction.id}</div>
+                </div>
+                <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 p-4 rounded-xl border-2 border-purple-200 dark:border-purple-600">
+                    <div class="text-sm text-purple-600 dark:text-purple-300 font-semibold mb-1">Estado</div>
+                    <div class="text-xl font-bold text-purple-800 dark:text-purple-100 flex items-center">
+                        <i class="${icon} mr-2"></i>${transaction.type}
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 p-4 rounded-xl border-2 border-green-200 dark:border-green-600">
+                    <div class="text-sm text-green-600 dark:text-green-300 font-semibold mb-1">Cliente ID</div>
+                    <div class="text-xl font-bold text-green-800 dark:text-green-100">${transaction.clientId}</div>
+                </div>
+                <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 p-4 rounded-xl border-2 border-orange-200 dark:border-orange-600">
+                    <div class="text-sm text-orange-600 dark:text-orange-300 font-semibold mb-1">Cajero ID</div>
+                    <div class="text-xl font-bold text-orange-800 dark:text-orange-100">${transaction.cashierId}</div>
+                </div>
+                <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900 dark:to-cyan-800 p-4 rounded-xl border-2 border-cyan-200 dark:border-cyan-600">
+                    <div class="text-sm text-cyan-600 dark:text-cyan-300 font-semibold mb-1">Método de Pago</div>
+                    <div class="text-lg font-bold text-cyan-800 dark:text-cyan-100">${transaction.paymentMethod}</div>
+                </div>
+                <div class="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900 dark:to-pink-800 p-4 rounded-xl border-2 border-pink-200 dark:border-pink-600">
+                    <div class="text-sm text-pink-600 dark:text-pink-300 font-semibold mb-1">Duración</div>
+                    <div class="text-xl font-bold text-pink-800 dark:text-pink-100">${transaction.duration.toFixed(2)}s</div>
+                </div>
+                <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900 dark:to-indigo-800 p-4 rounded-xl border-2 border-indigo-200 dark:border-indigo-600">
+                    <div class="text-sm text-indigo-600 dark:text-indigo-300 font-semibold mb-1">Hora Inicio</div>
+                    <div class="text-lg font-bold text-indigo-800 dark:text-indigo-100">
+                        ${new Date(transaction.startTime).toLocaleString('es-CL')}
+                    </div>
+                </div>
+                <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900 dark:to-red-800 p-4 rounded-xl border-2 border-red-200 dark:border-red-600">
+                    <div class="text-sm text-red-600 dark:text-red-300 font-semibold mb-1">Hora Fin</div>
+                    <div class="text-lg font-bold text-red-800 dark:text-red-100">
+                        ${new Date(transaction.endTime).toLocaleString('es-CL')}
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600">
+                <div class="text-sm text-gray-600 dark:text-gray-300 font-semibold mb-2">Dispositivo</div>
+                <div class="text-gray-800 dark:text-gray-100">
+                    <strong>DVR:</strong> ${transaction.nombreDvr} • 
+                    <strong>ID:</strong> ${transaction.idDispositivo} • 
+                    <strong>Cámara:</strong> ${transaction.numeroCamara}
+                </div>
+            </div>
+            <div class="mt-4 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900 dark:to-yellow-800 p-4 rounded-xl border-2 border-yellow-200 dark:border-yellow-600">
+                <div class="text-sm text-yellow-600 dark:text-yellow-300 font-semibold mb-2">Eventos</div>
+                <div class="text-yellow-800 dark:text-yellow-100">${transaction.events}</div>
+            </div>
+            <div class="mt-4 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900 dark:to-red-800 p-4 rounded-xl border-2 border-red-200 dark:border-red-600">
+                <div class="text-sm text-red-600 dark:text-red-300 font-semibold mb-2">Razón</div>
+                <div class="text-red-800 dark:text-red-100">${transaction.reason}</div>
+            </div>
+        `;
+
+        modal.classList.remove('hidden');
+    }
+
+    closeModal() {
+        const modal = document.getElementById('transaction-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
     getTransactionCategory(type) {
         if (type === 'Normal') return 'normal';
         if (['Patrón No Reconocido', 'Transacción Sin Método de Pago', 'Caja Abierta Sin Pago'].includes(type)) {
@@ -469,7 +844,6 @@ class ModernDashboard {
         }[category] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
 
-    // Métodos de utilidad
     formatNumber(num) {
         return new Intl.NumberFormat('es-CL').format(num || 0);
     }
@@ -499,18 +873,14 @@ class ModernDashboard {
         };
     }
 
-    // Métodos de UI y UX
     showToast(message, type = 'info') {
-        // Implementar sistema de notificaciones toast
         console.log(`${type.toUpperCase()}: ${message}`);
         
-        // Crear elemento toast si no existe un sistema
         const toastContainer = document.getElementById('toast-container') || this.createToastContainer();
         const toast = this.createToastElement(message, type);
         
         toastContainer.appendChild(toast);
         
-        // Auto-remover después de 3 segundos
         setTimeout(() => {
             if (toast.parentNode) {
                 toast.remove();
@@ -538,7 +908,6 @@ class ModernDashboard {
         toast.className = `${bgColor} text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 transform translate-x-0`;
         toast.textContent = message;
 
-        // Animar entrada
         requestAnimationFrame(() => {
             toast.style.transform = 'translateX(-100%)';
         });
@@ -575,13 +944,13 @@ class ModernDashboard {
     }
 
     showLoadingStates() {
-        // Mostrar skeleton loaders
         this.showKPIsSkeleton();
         this.showTransactionsSkeleton();
+        this.showDvrSkeleton();
     }
 
     hideLoadingStates() {
-        // Remover skeleton loaders se hace automáticamente al renderizar contenido real
+        // Se hace automáticamente al renderizar contenido real
     }
 
     showKPIsSkeleton() {
@@ -615,6 +984,24 @@ class ModernDashboard {
         `).join('');
     }
 
+    showDvrSkeleton() {
+        const container = document.getElementById('dvr-list-container');
+        if (!container) return;
+
+        container.innerHTML = Array(3).fill().map(() => `
+            <div class="bg-gray-200 dark:bg-gray-700 rounded-xl p-4 animate-pulse">
+                <div class="flex items-center space-x-3 mb-3">
+                    <div class="w-4 h-4 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
+                    <div class="flex-1">
+                        <div class="h-4 bg-gray-300 dark:bg-gray-600 rounded w-3/4 mb-2"></div>
+                        <div class="h-3 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
+                    </div>
+                </div>
+                <div class="h-10 bg-gray-300 dark:bg-gray-600 rounded-lg w-full"></div>
+            </div>
+        `).join('');
+    }
+
     hideGlobalLoading() {
         const overlay = document.getElementById('loading-overlay');
         if (overlay) {
@@ -622,33 +1009,85 @@ class ModernDashboard {
         }
     }
 
-    // Placeholder methods for missing functionality (implement as needed)
     applyFilters() {
-        // Implementar lógica de filtros
-        console.log('Aplicando filtros...');
+        const searchInputs = document.querySelectorAll('#search-input');
+        let searchTerm = '';
+        searchInputs.forEach(input => {
+            if (input && input.value) searchTerm = input.value.toLowerCase();
+        });
+
+        const typeFilter = document.getElementById('type-filter')?.value || '';
+        const paymentFilter = document.getElementById('payment-filter')?.value || '';
+
+        console.log('🔍 Aplicando filtros:', { searchTerm, typeFilter, paymentFilter });
+
+        this.filteredTransactions = this.transactions.filter(t => {
+            const matchesSearch = !searchTerm || 
+                t.id.toString().includes(searchTerm) ||
+                t.clientId?.toLowerCase().includes(searchTerm) ||
+                t.cashierId?.toLowerCase().includes(searchTerm) ||
+                t.nombreDvr?.toLowerCase().includes(searchTerm) ||
+                t.reason?.toLowerCase().includes(searchTerm);
+
+            let matchesType = true;
+            if (typeFilter) {
+                const category = this.getTransactionCategory(t.type);
+                matchesType = category === typeFilter;
+            }
+
+            let matchesPayment = true;
+            if (paymentFilter) {
+                if (paymentFilter === 'pago_efectivo') {
+                    matchesPayment = t.paymentMethod !== 'pago_tarjeta' && t.paymentMethod;
+                } else {
+                    matchesPayment = t.paymentMethod === paymentFilter;
+                }
+            }
+
+            return matchesSearch && matchesType && matchesPayment;
+        });
+
+        this.currentPage = 1;
         this.renderTransactions();
-    }
-
-    showTransactionDetail(transaction) {
-        console.log('Mostrando detalle de transacción:', transaction.id);
-        // Implementar modal de detalle
-    }
-
-    closeModal() {
-        const modal = document.getElementById('transaction-modal');
-        if (modal) {
-            modal.classList.add('hidden');
+        
+        if (searchTerm || typeFilter || paymentFilter) {
+            this.showToast(`${this.filteredTransactions.length} transacciones encontradas`, 'info');
         }
     }
 
     updatePagination() {
-        // Implementar lógica de paginación
+        const totalPages = Math.ceil(this.filteredTransactions.length / this.itemsPerPage);
+        const pageInfo = document.getElementById('page-info');
+        const prevBtn = document.getElementById('prev-page');
+        const nextBtn = document.getElementById('next-page');
+
+        if (pageInfo) {
+            const start = (this.currentPage - 1) * this.itemsPerPage + 1;
+            const end = Math.min(this.currentPage * this.itemsPerPage, this.filteredTransactions.length);
+            
+            pageInfo.textContent = totalPages > 0 ? 
+                `Mostrando ${start}-${end} de ${this.filteredTransactions.length} transacciones` : 
+                'No hay transacciones';
+        }
+
+        if (prevBtn) {
+            prevBtn.disabled = this.currentPage <= 1;
+            prevBtn.classList.toggle('opacity-50', this.currentPage <= 1);
+            prevBtn.classList.toggle('cursor-not-allowed', this.currentPage <= 1);
+        }
+
+        if (nextBtn) {
+            nextBtn.disabled = this.currentPage >= totalPages;
+            nextBtn.classList.toggle('opacity-50', this.currentPage >= totalPages);
+            nextBtn.classList.toggle('cursor-not-allowed', this.currentPage >= totalPages);
+        }
     }
 
     previousPage() {
         if (this.currentPage > 1) {
             this.currentPage--;
             this.renderTransactions();
+            this.scrollToTransactions();
         }
     }
 
@@ -657,6 +1096,65 @@ class ModernDashboard {
         if (this.currentPage < totalPages) {
             this.currentPage++;
             this.renderTransactions();
+            this.scrollToTransactions();
+        }
+    }
+
+    clearAllFilters() {
+        const searchInputs = document.querySelectorAll('#search-input');
+        searchInputs.forEach(input => {
+            if (input) input.value = '';
+        });
+
+        const typeFilter = document.getElementById('type-filter');
+        const paymentFilter = document.getElementById('payment-filter');
+        
+        if (typeFilter) typeFilter.value = '';
+        if (paymentFilter) paymentFilter.value = '';
+    }
+
+    updateFilterUI(filterType) {
+        const typeFilter = document.getElementById('type-filter');
+        const paymentFilter = document.getElementById('payment-filter');
+        
+        if (typeFilter) {
+            switch (filterType) {
+                case 'normal':
+                    typeFilter.value = 'normal';
+                    break;
+                case 'anomalous':
+                    typeFilter.value = 'anomalous';
+                    break;
+                default:
+                    typeFilter.value = '';
+            }
+        }
+        
+        if (paymentFilter) {
+            switch (filterType) {
+                case 'tarjeta':
+                    paymentFilter.value = 'pago_tarjeta';
+                    break;
+                case 'efectivo':
+                    paymentFilter.value = 'pago_efectivo';
+                    break;
+                default:
+                    paymentFilter.value = '';
+            }
+        }
+    }
+
+    scrollToTransactions() {
+        const transactionsSection = document.getElementById('transactions-list');
+        if (transactionsSection) {
+            const offset = 100;
+            const elementPosition = transactionsSection.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - offset;
+
+            window.scrollTo({
+                top: offsetPosition,
+                behavior: 'smooth'
+            });
         }
     }
 
@@ -720,6 +1218,7 @@ class ModernDashboard {
 
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('📄 DOM cargado, verificando autenticación...');
     if (window.auth?.isAuthenticated()) {
         window.modernDashboard = new ModernDashboard();
     } else {

@@ -5,7 +5,8 @@ const API_CONFIG = {
     endpoints: {
         validateUser: '/api/login',
         getLog: '/api/logs',
-        summary: '/api/summary'
+        summary: '/api/summary',
+        dvrPayments: '/api/dvr-payments'
     }
 };
 
@@ -72,6 +73,87 @@ function logout() {
 }
 
 // ============================================
+// UTILIDADES DE USUARIO
+// ============================================
+
+/**
+ * Genera iniciales a partir de un nombre completo
+ * @param {string} fullName - Nombre completo del usuario
+ * @returns {string} - Iniciales (máximo 2 caracteres)
+ */
+function getUserInitials(fullName) {
+    if (!fullName || typeof fullName !== 'string') {
+        return 'U';
+    }
+
+    const cleaned = fullName.trim();
+    if (!cleaned) return 'U';
+
+    const words = cleaned.split(/\s+/).filter(w => w.length > 0);
+
+    if (words.length === 0) return 'U';
+    if (words.length === 1) {
+        // Si solo hay una palabra, tomar las primeras 2 letras
+        return words[0].substring(0, 2).toUpperCase();
+    }
+
+    // Si hay 2 o más palabras, tomar la primera letra de las primeras 2
+    return (words[0][0] + words[1][0]).toUpperCase();
+}
+
+/**
+ * Normaliza el nombre completo del usuario
+ * @param {string} nombreApi - Nombre desde la API
+ * @param {string} email - Email del usuario (fallback)
+ * @returns {string} - Nombre normalizado
+ */
+function normalizeFullName(nombreApi, email) {
+    if (nombreApi && typeof nombreApi === 'string') {
+        const cleaned = nombreApi.trim();
+        if (cleaned.length > 0) {
+            // Capitalizar cada palabra
+            return cleaned
+                .split(/\s+/)
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+        }
+    }
+
+    // Fallback: usar la parte antes del @ del email
+    if (email && typeof email === 'string') {
+        const username = email.split('@')[0];
+        return username.charAt(0).toUpperCase() + username.slice(1);
+    }
+
+    return 'Usuario';
+}
+
+/**
+ * Formatea la fecha del último acceso
+ * @param {string} ultimoAcceso - Fecha en formato ISO o timestamp
+ * @returns {string} - Fecha formateada o '-'
+ */
+function formatLastAccess(ultimoAcceso) {
+    if (!ultimoAcceso) return '-';
+
+    try {
+        const date = new Date(ultimoAcceso);
+        if (isNaN(date.getTime())) return '-';
+
+        return date.toLocaleString('es-CL', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    } catch (error) {
+        console.warn('⚠️ Error formateando fecha:', error);
+        return '-';
+    }
+}
+
+// ============================================
 // LOGIN
 // ============================================
 
@@ -104,19 +186,35 @@ async function login(username, password, remember = false) {
         if (data.success === true) {
             const apiData = data.data || {};
 
+            // Extraer y normalizar datos del usuario
+            const email = apiData.correoUsuaWeb || username;
+            const rawFullName = apiData.nombreUsuaWeb || apiData.nombre || apiData.NombreUsuaWeb || '';
+            const fullName = normalizeFullName(rawFullName, email);
+            const initials = getUserInitials(fullName);
+
             const userData = {
-                email: apiData.correoUsuaWeb || username,
+                email: email,
                 username: username,
-                fullName: apiData.nombreUsuaWeb || 'Usuario',
-                estado: apiData.estadoUsuaWeb || 'A',
-                ultimoAcceso: apiData.ultimoAccesoUsuaWeb || null,
+                fullName: fullName,
+                initials: initials,
+                estado: apiData.estadoUsuaWeb || apiData.estado || 'A',
+                ultimoAcceso: apiData.ultimoAccesoUsuaWeb || apiData.ultimoAcceso || null,
+                ultimoAccesoFormatted: formatLastAccess(apiData.ultimoAccesoUsuaWeb || apiData.ultimoAcceso),
                 loginTime: Date.now(),
-                isLoggedIn: true
+                isLoggedIn: true,
+                // Campos adicionales opcionales
+                telefono: apiData.telefonoUsuaWeb || apiData.telefono || null,
+                direccion: apiData.direccionUsuaWeb || apiData.direccion || null,
+                rol: apiData.rolUsuaWeb || apiData.rol || 'usuario'
             };
 
             saveUserData(userData, remember);
 
-            console.log('✅ Login exitoso:', userData.email);
+            console.log('✅ Login exitoso:', {
+                email: userData.email,
+                fullName: userData.fullName,
+                initials: userData.initials
+            });
 
             return {
                 success: true,
@@ -247,6 +345,48 @@ async function fetchTransactionSummary(fecha = null, usuarioWeb = null, idDispos
 }
 
 // ============================================
+// OBTENER LISTA DE DVRS Y PAGOS
+// ============================================
+
+async function fetchDvrPayments(usuarioWeb = null) {
+    try {
+        const userData = getUserData();
+        if (!userData) {
+            throw new Error('Usuario no autenticado');
+        }
+
+        const finalUsuarioWeb = usuarioWeb || userData.email;
+
+        const url = new URL(API_CONFIG.endpoints.dvrPayments, window.location.origin);
+        url.searchParams.append('usuarioWeb', finalUsuarioWeb);
+
+        console.log('💳 Fetching DVR payments:', url.toString());
+
+        const response = await fetch(url.toString(), {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+
+        console.log('📡 Respuesta DVR Payments API:', response.status);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('📦 DVR Payments recibido:', data.Data?.length || 0, 'DVRs');
+
+        return data;
+
+    } catch (error) {
+        console.error('❌ Error fetching DVR payments:', error);
+        throw error;
+    }
+}
+
+// ============================================
 // PROCESAR DATOS
 // ============================================
 
@@ -339,9 +479,14 @@ if (typeof window !== 'undefined') {
         login,
         fetchTransactionLogs,
         fetchTransactionSummary,
+        fetchDvrPayments,
         processTransactionData,
         calculateKPIs,
-        formatDateForApi
+        formatDateForApi,
+        // Nuevas utilidades
+        getUserInitials,
+        normalizeFullName,
+        formatLastAccess
     };
 
     console.log('✅ Auth system loaded');

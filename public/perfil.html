@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Korex Security - Perfil</title>
+
+    <!-- Tailwind / Iconos / Fuente -->
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .profile-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .profile-dropdown {
+            transform: translateY(-10px);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 9999;
+        }
+
+        .profile-dropdown.show {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        @media (max-width: 640px) {
+            header .title-text {
+                font-size: 1.1rem;
+            }
+            header .subtitle-text {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Header -->
+    <header class="glass-effect shadow-lg sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
+            <div class="flex items-center justify-between gap-3">
+                <!-- Logo + título -->
+                <div class="flex items-center space-x-3 sm:space-x-4 min-w-0">
+                    <div class="w-10 h-10 sm:w-12 sm:h-12 gradient-bg rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                        <i class="fas fa-shield-halved text-white text-lg sm:text-xl"></i>
+                    </div>
+                    <div class="truncate">
+                        <h1 class="title-text text-lg sm:text-2xl font-bold text-gray-800">
+                            Korex Security
+                        </h1>
+                        <p class="subtitle-text text-xs sm:text-sm text-gray-600">
+                            Perfil de Usuario
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Acciones derecha -->
+                <div class="flex items-center space-x-2 sm:space-x-4">
+                    <!-- Botón Dashboard -->
+                    <a href="/index.html"
+                       class="inline-flex items-center px-2.5 py-1.5 sm:px-4 sm:py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs sm:text-sm whitespace-nowrap transition-colors duration-200">
+                        <i class="fas fa-chart-line mr-1.5 sm:mr-2"></i>
+                        <span class="hidden sm:inline">Volver al Dashboard</span>
+                        <span class="sm:hidden">Dashboard</span>
+                    </a>
+
+                    <!-- Perfil -->
+                    <div class="relative z-50">
+                        <button id="profile-button"
+                                type="button"
+                                class="flex items-center space-x-2 sm:space-x-3 px-2 py-1.5 sm:px-3 sm:py-2 rounded-xl hover:bg-gray-100 transition-colors duración-200 focus:outline-none">
+                            <div class="w-9 h-9 sm:w-10 sm:h-10 profile-avatar rounded-full flex items-center justify-center text-white font-bold">
+                                <span id="profile-avatar-initials">U</span>
+                            </div>
+                            <div class="text-left hidden sm:block">
+                                <p class="text-xs sm:text-sm font-semibold text-gray-800" id="user-display-name">Usuario</p>
+                                <p class="text-[10px] sm:text-xs text-gray-500" id="user-display-email">email@korex.cl</p>
+                            </div>
+                            <i class="fas fa-chevron-down text-gray-400 text-xs"></i>
+                        </button>
+
+                        <div id="profile-dropdown"
+                             class="profile-dropdown absolute right-0 mt-2 w-48 glass-effect rounded-xl shadow-lg py-2">
+                            <div class="px-4 py-2 border-b border-gray-200">
+                                <p class="text-sm font-semibold text-gray-800" id="dropdown-user-name">Usuario</p>
+                                <p class="text-xs text-gray-500" id="dropdown-user-email">email@korex.cl</p>
+                            </div>
+                            <a href="/index.html"
+                               class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                                <i class="fas fa-chart-line mr-3"></i>
+                                Dashboard
+                            </a>
+                            <hr class="my-2 border-gray-200">
+                            <button id="logout-link"
+                                    class="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50">
+                                <i class="fas fa-sign-out-alt mr-3"></i>
+                                Cerrar Sesión
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="max-w-6xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
+        <!-- Card de información del usuario -->
+        <section class="glass-effect rounded-2xl shadow-xl p-4 sm:p-6">
+            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
+                <div class="w-20 h-20 sm:w-24 sm:h-24 profile-avatar rounded-full flex items-center justify-center text-white text-2xl sm:text-3xl font-bold flex-shrink-0">
+                    <span id="profile-initials">U</span>
+                </div>
+                <div class="flex-1 w-full">
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-800 mb-1 truncate" id="profile-fullname">
+                        Nombre del Usuario
+                    </h2>
+                    <p class="text-xs sm:text-sm text-gray-500 mb-3 break-all" id="profile-email">
+                        email@korex.cl
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-xs sm:text-sm text-gray-700">
+                        <div class="bg-gray-50 rounded-xl px-3 py-2">
+                            <p class="font-semibold text-gray-600 text-xs sm:text-sm">Estado</p>
+                            <p id="profile-status" class="mt-0.5 text-sm">Activo</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-xl px-3 py-2">
+                            <p class="font-semibold text-gray-600 text-xs sm:text-sm">Último acceso</p>
+                            <p id="profile-last-access" class="mt-0.5 text-sm">-</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DVR / Suscripciones Section -->
+        <section class="glass-effect rounded-2xl shadow-xl p-4 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-4">
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
+                    <i class="fas fa-video mr-2 sm:mr-3 text-green-500"></i>
+                    <span>Estado de DVR y Suscripciones</span>
+                </h2>
+                <div class="text-xs sm:text-sm text-gray-500 flex items-center flex-wrap gap-2">
+                    <span class="flex items-center">
+                        <i class="fas fa-circle text-green-500 mr-1"></i> Sin deuda
+                    </span>
+                    <span class="hidden sm:inline mx-2">|</span>
+                    <span class="flex items-center">
+                        <i class="fas fa-circle text-red-500 mr-1"></i> Con deuda
+                    </span>
+                </div>
+            </div>
+
+            <div id="dvr-list-container"
+                 class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                <!-- Tarjetas de DVR se cargan vía perfil.js -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 right-2 sm:right-4 z-50 space-y-2"></div>
+
+    <!-- Footer -->
+    <footer class="mt-10 sm:mt-16 py-6 sm:py-8 text-center text-white text-opacity-80 text-xs sm:text-sm">
+        <div class="max-w-6xl mx-auto px-3 sm:px-4">
+            <p>
+                &copy; 2025 Korex Security. Todos los derechos reservados.
+                <span class="hidden sm:inline mx-2">|</span>
+                <span class="block sm:inline">Sistema de Monitoreo de Transacciones</span>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="/js/auth.js"></script>
+    <script src="/js/perfil.js"></script>
+</body>
+</html>
