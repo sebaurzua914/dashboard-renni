@@ -395,7 +395,7 @@ function processTransactionData(apiData) {
         return [];
     }
 
-    return apiData.Data.map(t => ({
+    const processedTransactions = apiData.Data.map(t => ({
         id: t.Id,
         idDispositivo: t.IdDispositivo,
         nombreDvr: (t.NombreDvr || '').trim(),
@@ -412,6 +412,21 @@ function processTransactionData(apiData) {
         logDate: t.LogDate,
         createdAt: t.CreatedAt
     }));
+
+    // Ordenar por startTime de más reciente a más antigua (descendente)
+    processedTransactions.sort((a, b) => {
+        const dateA = new Date(a.startTime);
+        const dateB = new Date(b.startTime);
+        return dateB - dateA; // Más reciente primero
+    });
+
+    console.log('📋 Transacciones ordenadas por startTime (más reciente primero):', processedTransactions.length);
+    if (processedTransactions.length > 0) {
+        console.log('🕐 Primera (más reciente):', processedTransactions[0].startTime);
+        console.log('🕐 Última (más antigua):', processedTransactions[processedTransactions.length - 1].startTime);
+    }
+
+    return processedTransactions;
 }
 
 // ============================================

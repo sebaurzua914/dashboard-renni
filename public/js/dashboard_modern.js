@@ -722,63 +722,159 @@ class ModernDashboard {
 
         const category = this.getTransactionCategory(transaction.type);
         const icon = this.getTransactionIcon(transaction.type);
+        const isAnomalous = category === 'anomalous';
 
         content.innerHTML = `
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 p-4 rounded-xl border-2 border-blue-200 dark:border-blue-600">
-                    <div class="text-sm text-blue-600 dark:text-blue-300 font-semibold mb-1">ID Transacción</div>
-                    <div class="text-2xl font-bold text-blue-800 dark:text-blue-100">${transaction.id}</div>
-                </div>
-                <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 p-4 rounded-xl border-2 border-purple-200 dark:border-purple-600">
-                    <div class="text-sm text-purple-600 dark:text-purple-300 font-semibold mb-1">Estado</div>
-                    <div class="text-xl font-bold text-purple-800 dark:text-purple-100 flex items-center">
-                        <i class="${icon} mr-2"></i>${transaction.type}
+            <!-- Header con alerta visual para anomalías -->
+            ${isAnomalous ? `
+                <div class="mb-6 bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-xl shadow-lg">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-red-400 rounded-lg animate-pulse">
+                                <i class="fas fa-exclamation-triangle text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-lg">⚠️ ALERTA DETECTADA</h3>
+                                <p class="text-red-100 text-sm">Esta transacción requiere atención inmediata</p>
+                            </div>
+                        </div>
+                        <div class="text-2xl font-bold">#${transaction.id}</div>
                     </div>
                 </div>
-                <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 p-4 rounded-xl border-2 border-green-200 dark:border-green-600">
-                    <div class="text-sm text-green-600 dark:text-green-300 font-semibold mb-1">Cliente ID</div>
-                    <div class="text-xl font-bold text-green-800 dark:text-green-100">${transaction.clientId}</div>
-                </div>
-                <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 p-4 rounded-xl border-2 border-orange-200 dark:border-orange-600">
-                    <div class="text-sm text-orange-600 dark:text-orange-300 font-semibold mb-1">Cajero ID</div>
-                    <div class="text-xl font-bold text-orange-800 dark:text-orange-100">${transaction.cashierId}</div>
-                </div>
-                <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900 dark:to-cyan-800 p-4 rounded-xl border-2 border-cyan-200 dark:border-cyan-600">
-                    <div class="text-sm text-cyan-600 dark:text-cyan-300 font-semibold mb-1">Método de Pago</div>
-                    <div class="text-lg font-bold text-cyan-800 dark:text-cyan-100">${transaction.paymentMethod}</div>
-                </div>
-                <div class="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900 dark:to-pink-800 p-4 rounded-xl border-2 border-pink-200 dark:border-pink-600">
-                    <div class="text-sm text-pink-600 dark:text-pink-300 font-semibold mb-1">Duración</div>
-                    <div class="text-xl font-bold text-pink-800 dark:text-pink-100">${transaction.duration.toFixed(2)}s</div>
-                </div>
-                <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900 dark:to-indigo-800 p-4 rounded-xl border-2 border-indigo-200 dark:border-indigo-600">
-                    <div class="text-sm text-indigo-600 dark:text-indigo-300 font-semibold mb-1">Hora Inicio</div>
-                    <div class="text-lg font-bold text-indigo-800 dark:text-indigo-100">
-                        ${new Date(transaction.startTime).toLocaleString('es-CL')}
+            ` : ''}
+            
+            <!-- Información Principal - Optimizada para móviles -->
+            <div class="space-y-4">
+                <!-- ID y Estado - Destacados -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 p-4 rounded-xl border-2 border-blue-200 dark:border-blue-600">
+                        <div class="text-xs text-blue-600 dark:text-blue-300 font-semibold mb-1 uppercase tracking-wide">ID Transacción</div>
+                        <div class="text-xl sm:text-2xl font-bold text-blue-800 dark:text-blue-100">${transaction.id}</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900 dark:to-purple-800 p-4 rounded-xl border-2 border-purple-200 dark:border-purple-600">
+                        <div class="text-xs text-purple-600 dark:text-purple-300 font-semibold mb-1 uppercase tracking-wide">Estado</div>
+                        <div class="text-lg sm:text-xl font-bold text-purple-800 dark:text-purple-100 flex items-center flex-wrap">
+                            <i class="${icon} mr-2"></i>
+                            <span class="break-words">${transaction.type}</span>
+                        </div>
                     </div>
                 </div>
-                <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900 dark:to-red-800 p-4 rounded-xl border-2 border-red-200 dark:border-red-600">
-                    <div class="text-sm text-red-600 dark:text-red-300 font-semibold mb-1">Hora Fin</div>
-                    <div class="text-lg font-bold text-red-800 dark:text-red-100">
-                        ${new Date(transaction.endTime).toLocaleString('es-CL')}
+
+                <!-- Participantes -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 p-4 rounded-xl border-2 border-green-200 dark:border-green-600">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <i class="fas fa-user text-green-600 text-xs"></i>
+                            <div class="text-xs text-green-600 dark:text-green-300 font-semibold uppercase tracking-wide">Cliente</div>
+                        </div>
+                        <div class="text-lg sm:text-xl font-bold text-green-800 dark:text-green-100">#${transaction.clientId}</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900 dark:to-orange-800 p-4 rounded-xl border-2 border-orange-200 dark:border-orange-600">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <i class="fas fa-user-tie text-orange-600 text-xs"></i>
+                            <div class="text-xs text-orange-600 dark:text-orange-300 font-semibold uppercase tracking-wide">Cajero</div>
+                        </div>
+                        <div class="text-lg sm:text-xl font-bold text-orange-800 dark:text-orange-100">#${transaction.cashierId}</div>
                     </div>
                 </div>
-            </div>
-            <div class="mt-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600">
-                <div class="text-sm text-gray-600 dark:text-gray-300 font-semibold mb-2">Dispositivo</div>
-                <div class="text-gray-800 dark:text-gray-100">
-                    <strong>DVR:</strong> ${transaction.nombreDvr} • 
-                    <strong>ID:</strong> ${transaction.idDispositivo} • 
-                    <strong>Cámara:</strong> ${transaction.numeroCamara}
+
+                <!-- Pago y Duración -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-900 dark:to-cyan-800 p-4 rounded-xl border-2 border-cyan-200 dark:border-cyan-600">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <i class="${this.getPaymentIcon(transaction.paymentMethod)} text-cyan-600 text-xs"></i>
+                            <div class="text-xs text-cyan-600 dark:text-cyan-300 font-semibold uppercase tracking-wide">Método de Pago</div>
+                        </div>
+                        <div class="text-sm sm:text-lg font-bold text-cyan-800 dark:text-cyan-100 break-words">${transaction.paymentMethod}</div>
+                    </div>
+                    <div class="bg-gradient-to-br from-pink-50 to-pink-100 dark:from-pink-900 dark:to-pink-800 p-4 rounded-xl border-2 border-pink-200 dark:border-pink-600">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <i class="fas fa-stopwatch text-pink-600 text-xs"></i>
+                            <div class="text-xs text-pink-600 dark:text-pink-300 font-semibold uppercase tracking-wide">Duración</div>
+                        </div>
+                        <div class="text-lg sm:text-xl font-bold text-pink-800 dark:text-pink-100">${transaction.duration.toFixed(2)}s</div>
+                    </div>
                 </div>
-            </div>
-            <div class="mt-4 bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900 dark:to-yellow-800 p-4 rounded-xl border-2 border-yellow-200 dark:border-yellow-600">
-                <div class="text-sm text-yellow-600 dark:text-yellow-300 font-semibold mb-2">Eventos</div>
-                <div class="text-yellow-800 dark:text-yellow-100">${transaction.events}</div>
-            </div>
-            <div class="mt-4 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900 dark:to-red-800 p-4 rounded-xl border-2 border-red-200 dark:border-red-600">
-                <div class="text-sm text-red-600 dark:text-red-300 font-semibold mb-2">Razón</div>
-                <div class="text-red-800 dark:text-red-100">${transaction.reason}</div>
+
+                <!-- Horarios - Una sola columna en móviles -->
+                <div class="space-y-3 sm:grid sm:grid-cols-2 sm:gap-3 sm:space-y-0">
+                    <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900 dark:to-indigo-800 p-4 rounded-xl border-2 border-indigo-200 dark:border-indigo-600">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <i class="fas fa-play text-indigo-600 text-xs"></i>
+                            <div class="text-xs text-indigo-600 dark:text-indigo-300 font-semibold uppercase tracking-wide">Hora Inicio</div>
+                        </div>
+                        <div class="text-sm sm:text-lg font-bold text-indigo-800 dark:text-indigo-100">
+                            ${new Date(transaction.startTime).toLocaleString('es-CL', {
+                                day: '2-digit',
+                                month: '2-digit', 
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                            })}
+                        </div>
+                    </div>
+                    <div class="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900 dark:to-red-800 p-4 rounded-xl border-2 border-red-200 dark:border-red-600">
+                        <div class="flex items-center space-x-2 mb-1">
+                            <i class="fas fa-stop text-red-600 text-xs"></i>
+                            <div class="text-xs text-red-600 dark:text-red-300 font-semibold uppercase tracking-wide">Hora Fin</div>
+                        </div>
+                        <div class="text-sm sm:text-lg font-bold text-red-800 dark:text-red-100">
+                            ${new Date(transaction.endTime).toLocaleString('es-CL', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric', 
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit'
+                            })}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dispositivo -->
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800 p-4 rounded-xl border-2 border-gray-200 dark:border-gray-600">
+                    <div class="flex items-center space-x-2 mb-3">
+                        <i class="fas fa-video text-gray-600 text-sm"></i>
+                        <div class="text-xs text-gray-600 dark:text-gray-300 font-semibold uppercase tracking-wide">Información del Dispositivo</div>
+                    </div>
+                    <div class="space-y-2 text-gray-800 dark:text-gray-100">
+                        <div class="flex flex-col sm:flex-row sm:items-center text-sm">
+                            <span class="font-semibold text-gray-600 dark:text-gray-400 w-20 shrink-0">DVR:</span>
+                            <span class="font-medium break-words">${transaction.nombreDvr}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center text-sm">
+                            <span class="font-semibold text-gray-600 dark:text-gray-400 w-20 shrink-0">ID:</span>
+                            <span class="font-mono text-xs bg-gray-200 dark:bg-gray-600 px-2 py-1 rounded break-all">${transaction.idDispositivo}</span>
+                        </div>
+                        <div class="flex flex-col sm:flex-row sm:items-center text-sm">
+                            <span class="font-semibold text-gray-600 dark:text-gray-400 w-20 shrink-0">Cámara:</span>
+                            <span class="font-medium">${transaction.numeroCamara}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Eventos -->
+                <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900 dark:to-yellow-800 p-4 rounded-xl border-2 border-yellow-200 dark:border-yellow-600">
+                    <div class="flex items-center space-x-2 mb-3">
+                        <i class="fas fa-list-ul text-yellow-600 text-sm"></i>
+                        <div class="text-xs text-yellow-600 dark:text-yellow-300 font-semibold uppercase tracking-wide">Eventos Registrados</div>
+                    </div>
+                    <div class="text-yellow-800 dark:text-yellow-100 text-sm leading-relaxed break-words">${transaction.events}</div>
+                </div>
+
+                <!-- Razón - Destacada para anomalías -->
+                <div class="bg-gradient-to-br ${isAnomalous ? 'from-red-100 to-red-200 dark:from-red-900 dark:to-red-800 border-red-300 dark:border-red-600' : 'from-blue-50 to-blue-100 dark:from-blue-900 dark:to-blue-800 border-blue-200 dark:border-blue-600'} p-4 rounded-xl border-2">
+                    <div class="flex items-center space-x-2 mb-3">
+                        <i class="fas ${isAnomalous ? 'fa-exclamation-triangle text-red-600' : 'fa-info-circle text-blue-600'} text-sm"></i>
+                        <div class="text-xs ${isAnomalous ? 'text-red-600 dark:text-red-300' : 'text-blue-600 dark:text-blue-300'} font-semibold uppercase tracking-wide">
+                            ${isAnomalous ? 'Motivo de la Alerta' : 'Información Adicional'}
+                        </div>
+                    </div>
+                    <div class="${isAnomalous ? 'text-red-800 dark:text-red-100 font-medium' : 'text-blue-800 dark:text-blue-100'} text-sm leading-relaxed break-words">
+                        ${transaction.reason}
+                    </div>
+                </div>
             </div>
         `;
 
