@@ -671,9 +671,11 @@ class ModernDashboard {
                             ${transaction.type}
                         </span>
                         <p class="text-xs text-gray-500 mt-1">
+                        
                             ${new Date(transaction.startTime).toLocaleTimeString('es-CL', {
                                 hour: '2-digit',
-                                minute: '2-digit'
+                                minute: '2-digit',
+                                second: '2-digit'
                             })}
                         </p>
                     </div>
@@ -803,7 +805,7 @@ class ModernDashboard {
                             <i class="fas fa-play text-indigo-600 text-xs"></i>
                             <div class="text-xs text-indigo-600 dark:text-indigo-300 font-semibold uppercase tracking-wide">Hora Inicio</div>
                         </div>
-                        <div class="text-sm sm:text-lg font-bold text-indigo-800 dark:text-indigo-100">
+                        <div class="text-sm sm:text-lg font-bold text-indigo-800 dark:text-indigo-100"> 
                             ${new Date(transaction.startTime).toLocaleString('es-CL', {
                                 day: '2-digit',
                                 month: '2-digit', 

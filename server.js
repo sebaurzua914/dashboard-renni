@@ -265,7 +265,7 @@ app.get('/api/logs', async (req, res) => {
             });
         }
 
-        console.log('📊 Objeto parseado:', data);
+        //console.log('📊 Objeto parseado:', data );
 
         if (apiResponse.statusCode !== 200 || data.Success === false) {
             console.error('❌ API externa devolvió error:', data.Message);

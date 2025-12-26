@@ -187,6 +187,28 @@ class ModernDashboard {
             }
         });
 
+        // Auto-refresh: Ejecutar loadAllData() cada 10 segundos (10000 ms)
+        // Evitar intervalos duplicados si ya existe uno
+        if (this.autoRefreshInterval) {
+            clearInterval(this.autoRefreshInterval);
+        }
+
+        this.autoRefreshInterval = setInterval(() => {
+            try {
+                console.log('🔁 Auto-refresh triggered');
+                this.loadAllData();
+            } catch (err) {
+                console.error('❌ Error en auto-refresh:', err);
+            }
+        }, 10000);
+
+        // Limpiar intervalo cuando la página se descarga
+        window.addEventListener('beforeunload', () => {
+            if (this.autoRefreshInterval) {
+                clearInterval(this.autoRefreshInterval);
+            }
+        });
+
         // Botón de logout
         const logoutLink = document.getElementById('logout-link');
         if (logoutLink) {
@@ -673,7 +695,8 @@ class ModernDashboard {
                         <p class="text-xs text-gray-500 mt-1">
                             ${new Date(transaction.startTime).toLocaleTimeString('es-CL', {
                                 hour: '2-digit',
-                                minute: '2-digit'
+                                minute: '2-digit',
+                                second: '2-digit'
                             })}
                         </p>
                     </div>
@@ -694,6 +717,14 @@ class ModernDashboard {
                         </div>
                         <p class="font-bold text-purple-600 dark:text-purple-400">#${transaction.cashierId}</p>
                     </div>
+                      ${transaction.boletaFolio == null ? ''  : `
+                     <div class="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg">
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-file-alt text-purple-600 text-sm"></i>
+                            <span class="text-xs text-gray-600 dark:text-gray-300">Boleta</span>
+                        </div>
+                        <p class="font-bold text-purple-600 dark:text-purple-400">#${transaction.boletaFolio}</p>
+                    </div>` } 
                 </div>
 
                 <div class="flex items-center justify-between">
